@@ -1,11 +1,11 @@
 package com.wealthsearch.service;
 
-import com.wealthsearch.api.CreateDocumentCommand;
 import com.wealthsearch.api.DocumentService;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.db.repository.DocumentRepository;
 import com.wealthsearch.model.Document;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,16 +20,23 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public Document createDocument(UUID clientId, CreateDocumentCommand command) {
+    public Document createDocument(Document document) {
+        Objects.requireNonNull(document, "document must not be null");
+
+        UUID clientId = document.getClientId();
+        if (clientId == null) {
+            throw new IllegalArgumentException("Client id must be provided");
+        }
+
         clientRepository.findById(clientId)
             .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
 
-        Document document = Document.builder()
+        Document toPersist = document.toBuilder()
+            .id(null)
             .clientId(clientId)
-            .title(command.title())
-            .content(command.content())
             .build();
-        return documentRepository.save(document);
+
+        return documentRepository.save(toPersist);
     }
 
     @Override

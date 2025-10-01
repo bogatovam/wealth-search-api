@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface DocumentService {
-    Document createDocument(UUID clientId, CreateDocumentCommand command);
+    Document createDocument(Document document);
 
     List<Document> findByClientId(UUID clientId);
 }

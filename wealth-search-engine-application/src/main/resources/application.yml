@@ -11,10 +11,6 @@ spring:
   jooq:
     sql-dialect: H2
 
-security:
-  jwt:
-    static-token: demo-token
-
 logging:
   level:
     com.wealthsearch: INFO

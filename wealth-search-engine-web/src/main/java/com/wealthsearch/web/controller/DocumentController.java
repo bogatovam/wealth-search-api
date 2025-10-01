@@ -1,10 +1,9 @@
 package com.wealthsearch.web.controller;
 
-import com.wealthsearch.api.CreateDocumentCommand;
 import com.wealthsearch.api.DocumentService;
-import com.wealthsearch.web.dto.CreateDocumentRequest;
-import com.wealthsearch.web.mapper.DocumentMapper;
+import com.wealthsearch.model.Document;
 import jakarta.validation.Valid;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,15 +25,19 @@ public class DocumentController {
     }
 
     @PostMapping
-    public ResponseEntity<com.wealthsearch.web.openapi.model.Document> createDocument(
+    public ResponseEntity<Document> createDocument(
         @PathVariable("clientId") UUID clientId,
-        @Valid @RequestBody CreateDocumentRequest request
+        @Valid @RequestBody Document document
     ) {
-        var command = new CreateDocumentCommand(request.title(), request.content());
-        var created = documentService.createDocument(clientId, command);
-        var responseBody = DocumentMapper.toApi(created);
-        var headers = new HttpHeaders();
+        Objects.requireNonNull(document, "document must not be null");
+
+        Document documentForClient = document.toBuilder()
+            .clientId(clientId)
+            .build();
+
+        Document created = documentService.createDocument(documentForClient);
+        HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.LOCATION, "/clients/" + clientId + "/documents/" + created.getId());
-        return new ResponseEntity<>(responseBody, headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(created, headers, HttpStatus.CREATED);
     }
 }

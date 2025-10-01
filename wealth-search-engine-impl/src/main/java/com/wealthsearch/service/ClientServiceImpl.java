@@ -1,9 +1,9 @@
 package com.wealthsearch.service;
 
 import com.wealthsearch.api.ClientService;
-import com.wealthsearch.api.CreateClientCommand;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.model.Client;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +18,15 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    public Client createClient(CreateClientCommand command) {
-        Client client = Client.builder()
-            .firstName(command.firstName())
-            .lastName(command.lastName())
-            .email(command.email().toLowerCase())
-            .countryOfResidence(command.countryOfResidence())
+    public Client createClient(Client client) {
+        Objects.requireNonNull(client, "client must not be null");
+
+        Client normalized = client.toBuilder()
+            .id(null)
+            .email(client.getEmail() != null ? client.getEmail().toLowerCase() : null)
             .build();
-        return clientRepository.save(client);
+
+        return clientRepository.save(normalized);
     }
 
     @Override

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -52,30 +52,8 @@
         </dependency>
     </dependencies>
 
-        <build>
+    <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <release>${java.version}</release>
-                </configuration>
-                <executions>
-                    <execution>
-                    <id>compile-entities-for-jooq</id>
-                    <phase>generate-sources</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                    <configuration>
-                        <includes>
-                            <include>**/entity/**/*.java</include>
-                        </includes>
-                    </configuration>
-                </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
@@ -94,7 +72,7 @@
                                     <properties>
                                         <property>
                                             <key>packages</key>
-                                            <value>com.wealthsearch.db.entity</value>
+                                            <value>com.wealthsearch.model</value>
                                         </property>
                                         <property>
                                             <key>persistence-unit-name</key>
@@ -154,10 +132,3 @@
         </plugins>
     </build>
 </project>
-
-
-
-
-
-
-

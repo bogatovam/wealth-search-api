@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -23,6 +23,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <openapi.generator.version>7.7.0</openapi.generator.version>
         <jooq.version>3.19.10</jooq.version>
+        <swagger.annotations.version>2.2.21</swagger.annotations.version>
+        <springdoc.version>2.6.0</springdoc.version>
     </properties>
 
     <modules>
@@ -51,6 +53,16 @@
                 <artifactId>jooq-codegen</artifactId>
                 <version>${jooq.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -59,26 +71,15 @@
             <plugins>
                 <plugin>
                     <groupId>org.openapitools</groupId>
-                    <artifactId>
-                        openapi-generator-maven-plugin
-                    </artifactId>
-                    <version>
-                        ${openapi.generator.version}
-                    </version>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi.generator.version}</version>
                 </plugin>
-
                 <plugin>
                     <groupId>org.jooq</groupId>
-                    <artifactId>
-                        jooq-codegen-maven
-                    </artifactId>
+                    <artifactId>jooq-codegen-maven</artifactId>
                     <version>${jooq.version}</version>
                 </plugin>
-
             </plugins>
-
         </pluginManagement>
     </build>
 </project>
-
-

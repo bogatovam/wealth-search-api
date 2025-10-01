@@ -1,5 +1,5 @@
 CREATE TABLE clients (
-    id BINARY(16) PRIMARY KEY,
+    id UUID PRIMARY KEY,
     first_name VARCHAR(128) NOT NULL,
     last_name VARCHAR(128) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
