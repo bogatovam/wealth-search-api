@@ -38,7 +38,7 @@ public class SearchServiceImpl implements SearchService {
             throw new BadRequestException("Query does not contain searchable characters");
         }
 
-        return clientRepository.findByEmailDomainFragment(normalizedQuery);
+        return clientRepository.findClientsByCompanyDomain(List.of(normalizedQuery));
     }
 
     private void validateQuery(String query) {

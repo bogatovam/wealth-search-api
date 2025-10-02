@@ -86,6 +86,7 @@ class JooqClientRepositoryTest extends PostgresContainerSupport {
             .email("insights@neviswealth.com")
             .countryOfResidence("US")
             .build());
+
         clientRepository.save(Client.builder()
             .firstName("Other")
             .lastName("Person")
@@ -93,7 +94,7 @@ class JooqClientRepositoryTest extends PostgresContainerSupport {
             .countryOfResidence("US")
             .build());
 
-        List<ClientSearchHit> results = clientRepository.findByEmailDomainFragment("Nevis Wealth");
+        List<ClientSearchHit> results = clientRepository.findClientsByCompanyDomain(List.of("Nevis Wealth"));
         assertThat(results)
             .extracting(ClientSearchHit::getClient)
             .extracting(Client::getId)

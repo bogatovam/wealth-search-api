@@ -13,5 +13,5 @@ public interface ClientRepository {
 
     Optional<Client> findById(UUID clientId);
 
-    List<ClientSearchHit> findByEmailDomainFragment(String domain);
+    List<ClientSearchHit> findClientsByCompanyDomain(List<String> domains);
 }

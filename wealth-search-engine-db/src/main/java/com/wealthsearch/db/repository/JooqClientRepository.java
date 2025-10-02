@@ -8,17 +8,14 @@ import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
 import com.wealthsearch.model.Client;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import com.wealthsearch.model.ClientSearchHit;
 import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -38,6 +35,7 @@ public class JooqClientRepository implements ClientRepository {
         String email = Optional.ofNullable(client.getEmail())
                                .map(String::toLowerCase)
                                .orElse(null);
+
         if (email != null && recordExistsByEmail(email)) {
             throw new DuplicateClientEmailException(email);
         }
@@ -45,8 +43,6 @@ public class JooqClientRepository implements ClientRepository {
         String countryCode = Optional.ofNullable(client.getCountryOfResidence())
                                      .map(code -> code.toUpperCase(Locale.ROOT))
                                      .orElse(null);
-
-        String domainName = extractDomainName(email);
 
         OffsetDateTime createdAt = Optional.ofNullable(client.getCreatedAt())
                                            .map(this::toUtc)
@@ -58,27 +54,81 @@ public class JooqClientRepository implements ClientRepository {
                                   .set(CLIENTS.LAST_NAME, client.getLastName())
                                   .set(CLIENTS.EMAIL, email)
                                   .set(CLIENTS.COUNTRY_OF_RESIDENCE, countryCode)
-                                  .set(CLIENTS.DOMAIN_NAME, domainName)
                                   .set(CLIENTS.CREATED_AT, createdAt)
                                   .returning()
                                   .fetchOptional()
                                   .orElseThrow(() -> new IllegalStateException("Failed to insert client"));
 
-        return mapClient(record);
+        return record.into(Client.class);
     }
 
     @Override
     public Optional<Client> findById(UUID clientId) {
         return dsl.selectFrom(CLIENTS)
                   .where(CLIENTS.ID.eq(clientId))
-                  .fetchOptional(this::mapClient);
+                  .fetchOptional()
+                  .map(r -> r.into(Client.class));
     }
 
     @Override
-    public List<ClientSearchHit> findByEmailDomainFragment(String query) {
-        return null;
+    public List<ClientSearchHit> findClientsByCompanyDomain(List<String> domains) {
+        Field<Double> score = this.createScoreFieldForSelect(CLIENTS.DOMAIN_NAME, domains);
+
+        List<Field<?>> fieldsForSelect = new ArrayList<>(List.of(CLIENTS.fields()));
+        fieldsForSelect.add(score);
+
+        return dsl.select(fieldsForSelect)
+                  .from(CLIENTS)
+                  .where(this.createFuzzyMatchCondition(CLIENTS.DOMAIN_NAME, domains))
+                  .orderBy(score)
+                  .fetch(record -> mapClient(record, score));
     }
 
+    private <T> Field<Double> createScoreFieldForSelect(Field<T> field, List<T> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            throw new IllegalArgumentException("At least one candidate must be provided");
+        }
+
+        var scores = candidates.stream()
+                               .filter(Objects::nonNull)
+                               .map(candidate -> {
+                                   Field<String> query = DSL.inline(candidate, SQLDataType.VARCHAR);
+
+                                   Field<Double> trigram = DSL.function("similarity", SQLDataType.DOUBLE, field, query);
+
+                                   Field<Double> word =
+                                           DSL.function("word_similarity", SQLDataType.DOUBLE, query, field);
+                                   Field<Double> strictWord =
+                                           DSL.function("strict_word_similarity", SQLDataType.DOUBLE, query, field);
+                                   return DSL.greatest(trigram, word, strictWord);
+                               })
+                               .toList();
+
+        Field<Double> score = DSL.greatest(scores.getFirst(), (Field<?>) scores.subList(1, scores.size()));
+
+        return score.as("score");
+    }
+
+    private Condition createFuzzyMatchCondition(Field<String> field, List<String> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            throw new IllegalArgumentException("At least one candidate must be provided");
+        }
+
+        Condition combined = DSL.falseCondition();
+
+        for (String candidate : candidates) {
+            Field<String> query = DSL.inline(candidate, SQLDataType.VARCHAR);
+            
+            Condition candidateCondition = DSL.condition("{0} % {1}", field, query)
+                                              .or(DSL.condition("{0} <% {1}", query, field))
+                                              .or(DSL.condition("{0} <<% {1}", query, field));
+            
+            combined = combined.or(candidateCondition);
+        }
+
+        return combined;
+    }
+    
     private boolean recordExistsById(UUID id) {
         return dsl.fetchExists(dsl.selectOne()
                                   .from(CLIENTS)
@@ -91,37 +141,9 @@ public class JooqClientRepository implements ClientRepository {
                                   .where(CLIENTS.EMAIL.eq(email)));
     }
 
-    private Client mapClient(Record record) {
-        ClientsRecord clientsRecord = record.into(CLIENTS);
-        return Client.builder()
-                     .id(clientsRecord.getId())
-                     .firstName(clientsRecord.getFirstName())
-                     .lastName(clientsRecord.getLastName())
-                     .email(clientsRecord.getEmail())
-                     .countryOfResidence(clientsRecord.getCountryOfResidence())
-                     .domainName(clientsRecord.getDomainName())
-                     .createdAt(toUtc(clientsRecord.getCreatedAt()))
-                     .build();
-    }
-
-    private String extractDomainName(String email) {
-        if (email == null || email.isEmpty()) {
-            throw new IllegalArgumentException("Email cannot be null or empty");
-        }
-
-        int atIndex = email.indexOf('@');
-        if (atIndex == -1 || atIndex == email.length() - 1) {
-            throw new IllegalArgumentException("Invalid email format");
-        }
-
-        String domainPart = email.substring(atIndex + 1);
-        int dotIndex = domainPart.indexOf('.');
-
-        if (dotIndex == -1) {
-            return domainPart;
-        }
-
-        return domainPart.substring(0, dotIndex);
+    private ClientSearchHit mapClient(Record record, Field<Double> score) {
+        Client client = record.into(Client.class);
+        return new ClientSearchHit(client, record.get(score));
     }
 
     private OffsetDateTime toUtc(OffsetDateTime dateTime) {
