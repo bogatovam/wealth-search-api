@@ -5,19 +5,22 @@ import static com.wealthsearch.db.jooq.tables.Clients.CLIENTS;
 import com.wealthsearch.db.jooq.tables.records.ClientsRecord;
 import com.wealthsearch.db.repository.exception.DuplicateClientEmailException;
 import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
-import com.wealthsearch.model.Client;
+import com.wealthsearch.model.*;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
-import com.wealthsearch.model.ClientSearchHit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.springframework.stereotype.Repository;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class JooqClientRepository implements ClientRepository {
@@ -40,13 +43,13 @@ public class JooqClientRepository implements ClientRepository {
             throw new DuplicateClientEmailException(email);
         }
 
+        String domainName = this.extractDomainName(email);
+
         String countryCode = Optional.ofNullable(client.getCountryOfResidence())
                                      .map(code -> code.toUpperCase(Locale.ROOT))
                                      .orElse(null);
 
-        OffsetDateTime createdAt = Optional.ofNullable(client.getCreatedAt())
-                                           .map(this::toUtc)
-                                           .orElseGet(() -> OffsetDateTime.now(ZoneOffset.UTC));
+        OffsetDateTime createdAt = OffsetDateTime.now(ZoneOffset.UTC);
 
         ClientsRecord record = dsl.insertInto(CLIENTS)
                                   .set(CLIENTS.ID, id)
@@ -55,6 +58,7 @@ public class JooqClientRepository implements ClientRepository {
                                   .set(CLIENTS.EMAIL, email)
                                   .set(CLIENTS.COUNTRY_OF_RESIDENCE, countryCode)
                                   .set(CLIENTS.CREATED_AT, createdAt)
+                                  .set(CLIENTS.DOMAIN_NAME, domainName)
                                   .returning()
                                   .fetchOptional()
                                   .orElseThrow(() -> new IllegalStateException("Failed to insert client"));
@@ -71,17 +75,38 @@ public class JooqClientRepository implements ClientRepository {
     }
 
     @Override
-    public List<ClientSearchHit> findClientsByCompanyDomain(List<String> domains) {
+    public SearchResult<ClientSearchHit> findClientsByCompanyDomain(List<String> domains, PaginationParams pagination) {
+        Condition condition = this.createFuzzyMatchCondition(CLIENTS.DOMAIN_NAME, domains);
+
+        Long totalCount = dsl.selectCount()
+                             .from(CLIENTS)
+                             .where(condition)
+                             .fetchOneInto(Long.class);
+
+        if (totalCount == null || totalCount == 0) {
+            return new SearchResult<ClientSearchHit>();
+        }
+
         Field<Double> score = this.createScoreFieldForSelect(CLIENTS.DOMAIN_NAME, domains);
 
         List<Field<?>> fieldsForSelect = new ArrayList<>(List.of(CLIENTS.fields()));
         fieldsForSelect.add(score);
 
-        return dsl.select(fieldsForSelect)
-                  .from(CLIENTS)
-                  .where(this.createFuzzyMatchCondition(CLIENTS.DOMAIN_NAME, domains))
-                  .orderBy(score)
-                  .fetch(record -> mapClient(record, score));
+        var query = dsl.select(fieldsForSelect)
+                       .from(CLIENTS)
+                       .where(condition)
+                       .orderBy(score.desc())
+                       .limit(pagination.getLimit())
+                       .offset(pagination.getOffset());
+
+        log.info("SQL Query: {}", query.getSQL(ParamType.INLINED));
+
+        List<ClientSearchHit> results = query.fetch(record -> mapClientSearchHit(record, score));
+
+        return SearchResult.<ClientSearchHit>builder()
+                           .results(results)
+                           .totalCount(totalCount)
+                           .build();
     }
 
     private <T> Field<Double> createScoreFieldForSelect(Field<T> field, List<T> candidates) {
@@ -98,13 +123,13 @@ public class JooqClientRepository implements ClientRepository {
 
                                    Field<Double> word =
                                            DSL.function("word_similarity", SQLDataType.DOUBLE, query, field);
-                                   Field<Double> strictWord =
-                                           DSL.function("strict_word_similarity", SQLDataType.DOUBLE, query, field);
-                                   return DSL.greatest(trigram, word, strictWord);
+
+                                   return DSL.greatest(trigram, word);
                                })
                                .toList();
 
-        Field<Double> score = DSL.greatest(scores.getFirst(), (Field<?>) scores.subList(1, scores.size()));
+        Field<Double> score = DSL.greatest(scores.getFirst(), scores.subList(1, scores.size())
+                                                                    .toArray(new Field[0]));
 
         return score.as("score");
     }
@@ -118,17 +143,16 @@ public class JooqClientRepository implements ClientRepository {
 
         for (String candidate : candidates) {
             Field<String> query = DSL.inline(candidate, SQLDataType.VARCHAR);
-            
+
             Condition candidateCondition = DSL.condition("{0} % {1}", field, query)
-                                              .or(DSL.condition("{0} <% {1}", query, field))
-                                              .or(DSL.condition("{0} <<% {1}", query, field));
-            
+                                              .or(DSL.condition("{0} <% {1}", query, field));
+
             combined = combined.or(candidateCondition);
         }
 
         return combined;
     }
-    
+
     private boolean recordExistsById(UUID id) {
         return dsl.fetchExists(dsl.selectOne()
                                   .from(CLIENTS)
@@ -141,7 +165,67 @@ public class JooqClientRepository implements ClientRepository {
                                   .where(CLIENTS.EMAIL.eq(email)));
     }
 
-    private ClientSearchHit mapClient(Record record, Field<Double> score) {
+    private String extractDomainName(String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+
+        String normalized = email.trim()
+                                 .toLowerCase(Locale.ROOT);
+
+        int atIndex = normalized.indexOf('@');
+        if (atIndex < 0 || atIndex == normalized.length() - 1) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+
+        String domainPart = normalized.substring(atIndex + 1);
+        if (domainPart.isEmpty()) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+
+        String candidate = domainPart;
+        int comIndex = domainPart.lastIndexOf(".");
+        if (comIndex > 0) {
+            candidate = domainPart.substring(0, comIndex);
+        }
+
+        candidate = trimTrailingDots(candidate);
+        if (candidate.isEmpty()) {
+            candidate = domainPart;
+        }
+
+        candidate = removeSpecialCharacters(candidate);
+        if (!candidate.isEmpty()) {
+            return candidate;
+        }
+
+        throw new IllegalArgumentException("Cannot derive domain name from email");
+    }
+
+    private String removeSpecialCharacters(String label) {
+        if (label == null) {
+            return "";
+        }
+        return label.replaceAll("[^a-z0-9]", "");
+    }
+
+    private String trimTrailingDots(String value) {
+        int end = value.length();
+        while (end > 0 && value.charAt(end - 1) == '.') {
+            end--;
+        }
+        return value.substring(0, end);
+    }
+
+    private Client mapClientRecord(Record record) {
+        Client client = record.into(Client.class);
+        client.setCreatedAt(toUtc(client.getCreatedAt()));
+        return client;
+    }
+
+
+    private ClientSearchHit mapClientSearchHit(Record record, Field<Double> score) {
         Client client = record.into(Client.class);
         return new ClientSearchHit(client, record.get(score));
     }

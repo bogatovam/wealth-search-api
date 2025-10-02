@@ -8,6 +8,9 @@ import com.wealthsearch.model.ClientSearchHit;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wealthsearch.model.DocumentSearchHit;
+import com.wealthsearch.model.PaginationParams;
+import com.wealthsearch.model.SearchResult;
 import com.wealthsearch.model.error.ErrorEntry;
 import com.wealthsearch.model.exception.BadRequestException;
 import com.wealthsearch.service.util.SearchQueryUtils;
@@ -30,7 +33,21 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ClientSearchHit> searchClientsPerCompanyName(String query) {
+    public SearchResult<ClientSearchHit> searchClientsPerCompanyName(String query, PaginationParams paginationParams) {
+        this.validateQuery(query);
+        String normalizedQuery = SearchQueryUtils.normalize(query);
+        normalizedQuery = SearchQueryUtils.removeSpaces(normalizedQuery);
+
+        if (normalizedQuery.isEmpty()) {
+            throw new BadRequestException("Query does not contain searchable characters");
+        }
+
+        return clientRepository.findClientsByCompanyDomain(List.of(normalizedQuery), paginationParams);
+    }
+
+    @Override
+    public SearchResult<DocumentSearchHit> searchDocumentsBySimilarTerms(String query,
+            PaginationParams paginationParams) {
         this.validateQuery(query);
         String normalizedQuery = SearchQueryUtils.normalize(query);
 
@@ -38,7 +55,7 @@ public class SearchServiceImpl implements SearchService {
             throw new BadRequestException("Query does not contain searchable characters");
         }
 
-        return clientRepository.findClientsByCompanyDomain(List.of(normalizedQuery));
+        return documentRepository.searchByContent(List.of(normalizedQuery), paginationParams);
     }
 
     private void validateQuery(String query) {

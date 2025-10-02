@@ -38,10 +38,4 @@ public class DocumentServiceImpl implements DocumentService {
 
         return documentRepository.save(toPersist);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Document> findByClientId(UUID clientId) {
-        return documentRepository.findByClientId(clientId);
-    }
 }

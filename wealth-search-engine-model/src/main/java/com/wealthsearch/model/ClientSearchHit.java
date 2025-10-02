@@ -8,7 +8,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Schema(name = "SearchHit", description = "Search result entry containing client and document match")
+@Schema(description = "Search result entry containing client and document match")
 public class ClientSearchHit {
 
     @Schema(description = "Matched client entity")

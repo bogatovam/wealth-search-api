@@ -3,6 +3,7 @@ package com.wealthsearch.model;
 import static com.wealthsearch.model.SchemaConstants.Clients;
 import static com.wealthsearch.model.SchemaConstants.ColumnDefinition;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -66,8 +67,9 @@ public class Client {
     @Schema(description = "ISO country code where the client resides", example = "CH")
     private String countryOfResidence;
 
+    @JsonIgnore
     @Column(name = Clients.COLUMN_DOMAIN_NAME, nullable = false, length = 128)
-    @Schema(description = "Email domain name extracted from email", example = "neviswealth", accessMode = Schema.AccessMode.READ_ONLY)
+    @Schema(description = "Email domain name extracted from email", example = "neviswealth", accessMode = Schema.AccessMode.READ_ONLY, hidden = true)
     private String domainName;
 
     @Column(name = Clients.COLUMN_CREATED_AT, nullable = false, columnDefinition = ColumnDefinition.TIMESTAMP_WITH_TIME_ZONE, updatable = false)

@@ -25,14 +25,20 @@ public final class SearchQueryUtils {
     public static String normalize(@NotNull String rawQuery) {
 
         String sanitized = stripUnsupportedCharacters(rawQuery);
-        sanitized = CONTROL_CHARACTERS.matcher(sanitized).replaceAll(" ");
-        sanitized = QUOTES.matcher(sanitized).replaceAll(" ");
+        sanitized = CONTROL_CHARACTERS.matcher(sanitized)
+                                      .replaceAll(" ");
+        sanitized = QUOTES.matcher(sanitized)
+                          .replaceAll(" ");
 
         String normalized = Normalizer.normalize(sanitized, Normalizer.Form.NFD);
-        normalized = COMBINING_MARKS.matcher(normalized).replaceAll("");
+        normalized = COMBINING_MARKS.matcher(normalized)
+                                    .replaceAll("");
         normalized = normalized.toLowerCase(Locale.ROOT);
-        normalized = DISALLOWED.matcher(normalized).replaceAll(" ");
-        normalized = MULTI_WHITESPACE.matcher(normalized).replaceAll(" ").trim();
+        normalized = DISALLOWED.matcher(normalized)
+                               .replaceAll(" ");
+        normalized = MULTI_WHITESPACE.matcher(normalized)
+                                     .replaceAll(" ")
+                                     .trim();
 
         return normalized;
     }
@@ -48,5 +54,9 @@ public final class SearchQueryUtils {
             builder.append(current);
         }
         return builder.toString();
+    }
+
+    public static String removeSpaces(String query) {
+        return query.replaceAll(" ", "");
     }
 }

@@ -1,6 +1,10 @@
 package com.wealthsearch.db.repository;
 
 import com.wealthsearch.model.Document;
+import com.wealthsearch.model.DocumentSearchHit;
+import com.wealthsearch.model.PaginationParams;
+import com.wealthsearch.model.SearchResult;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -9,5 +13,5 @@ public interface DocumentRepository {
 
     List<Document> findByClientId(UUID clientId);
 
-    List<Document> searchByContent(String searchTerm);
+    SearchResult<DocumentSearchHit> searchByContent(List<String> searchTerms, PaginationParams pagination);
 }

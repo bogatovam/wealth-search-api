@@ -6,6 +6,4 @@ import java.util.UUID;
 
 public interface DocumentService {
     Document createDocument(Document document);
-
-    List<Document> findByClientId(UUID clientId);
 }

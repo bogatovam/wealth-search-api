@@ -12,6 +12,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+
+import com.wealthsearch.model.DocumentSearchHit;
+import com.wealthsearch.model.SearchResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -112,8 +115,10 @@ class JooqDocumentRepositoryTest extends PostgresContainerSupport {
             .content("General market commentary")
             .build());
 
-        List<Document> results = documentRepository.searchByContent("nevis wealth");
-        assertThat(results)
+        SearchResult<DocumentSearchHit> results = documentRepository.searchByContent("nevis wealth");
+
+        assertThat(results.getResults())
+            .extracting(DocumentSearchHit::getDocument)
             .extracting(Document::getId)
             .containsExactly(contentMatch.getId(), titleMatch.getId());
     }
