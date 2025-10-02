@@ -2,7 +2,10 @@ package com.wealthsearch.service;
 
 import com.wealthsearch.api.ClientService;
 import com.wealthsearch.db.repository.ClientRepository;
+import com.wealthsearch.db.repository.exception.DuplicateClientEmailException;
 import com.wealthsearch.model.Client;
+import com.wealthsearch.api.exception.ClientAlreadyExistsException;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,14 +22,22 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public Client createClient(Client client) {
-        Objects.requireNonNull(client, "client must not be null");
 
         Client normalized = client.toBuilder()
-            .id(null)
-            .email(client.getEmail() != null ? client.getEmail().toLowerCase() : null)
-            .build();
+                                  .id(null)
+                                  .email(Optional.ofNullable(client.getEmail())
+                                                 .map(String::toLowerCase)
+                                                 .orElse(null))
+                                  .countryOfResidence(Optional.ofNullable(client.getCountryOfResidence())
+                                                              .map(code -> code.toUpperCase(Locale.ROOT))
+                                                              .orElse(null))
+                                  .build();
 
-        return clientRepository.save(normalized);
+        try {
+            return clientRepository.save(normalized);
+        } catch (DuplicateClientEmailException ex) {
+            throw new ClientAlreadyExistsException(normalized.getEmail());
+        }
     }
 
     @Override

@@ -1,10 +1,9 @@
 package com.wealthsearch.db.repository;
 
 import static com.wealthsearch.db.jooq.tables.Documents.DOCUMENTS;
-import static com.wealthsearch.db.repository.util.UuidByteConverter.fromBytes;
-import static com.wealthsearch.db.repository.util.UuidByteConverter.toBytes;
 
 import com.wealthsearch.db.jooq.tables.records.DocumentsRecord;
+import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
 import com.wealthsearch.model.Document;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -13,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
@@ -25,34 +25,31 @@ public class JooqDocumentRepository implements DocumentRepository {
     @Override
     public Document save(Document document) {
         UUID id = Optional.ofNullable(document.getId()).orElseGet(UUID::randomUUID);
-        OffsetDateTime createdAt = Optional.ofNullable(document.getCreatedAt()).orElseGet(OffsetDateTime::now);
-        Document persisted = document.toBuilder().id(id).createdAt(createdAt).build();
-
-        int updated = dsl.update(DOCUMENTS)
-            .set(DOCUMENTS.CLIENT_ID, toBytes(persisted.getClientId()))
-            .set(DOCUMENTS.TITLE, persisted.getTitle())
-            .set(DOCUMENTS.CONTENT, persisted.getContent())
-            .set(DOCUMENTS.CREATED_AT, toLocalDateTime(persisted.getCreatedAt()))
-            .where(DOCUMENTS.ID.eq(toBytes(id)))
-            .execute();
-
-        if (updated == 0) {
-            dsl.insertInto(DOCUMENTS)
-                .set(DOCUMENTS.ID, toBytes(id))
-                .set(DOCUMENTS.CLIENT_ID, toBytes(persisted.getClientId()))
-                .set(DOCUMENTS.TITLE, persisted.getTitle())
-                .set(DOCUMENTS.CONTENT, persisted.getContent())
-                .set(DOCUMENTS.CREATED_AT, toLocalDateTime(persisted.getCreatedAt()))
-                .execute();
+        if (recordExists(id)) {
+            throw new EntityAlreadyExistsException("Document with id '%s' already exists".formatted(id));
         }
 
-        return persisted;
+        OffsetDateTime createdAt = Optional.ofNullable(document.getCreatedAt())
+            .map(this::toUtc)
+            .orElseGet(() -> OffsetDateTime.now(ZoneOffset.UTC));
+
+        DocumentsRecord record = dsl.insertInto(DOCUMENTS)
+            .set(DOCUMENTS.ID, id)
+            .set(DOCUMENTS.CLIENT_ID, document.getClientId())
+            .set(DOCUMENTS.TITLE, document.getTitle())
+            .set(DOCUMENTS.CONTENT, document.getContent())
+            .set(DOCUMENTS.CREATED_AT, createdAt)
+            .returning()
+            .fetchOptional()
+            .orElseThrow(() -> new IllegalStateException("Failed to insert document"));
+
+        return mapDocument(record);
     }
 
     @Override
     public List<Document> findByClientId(UUID clientId) {
         return dsl.selectFrom(DOCUMENTS)
-            .where(DOCUMENTS.CLIENT_ID.eq(toBytes(clientId)))
+            .where(DOCUMENTS.CLIENT_ID.eq(clientId))
             .orderBy(DOCUMENTS.CREATED_AT.desc())
             .fetch(this::mapDocument);
     }
@@ -67,21 +64,22 @@ public class JooqDocumentRepository implements DocumentRepository {
             .fetch(this::mapDocument);
     }
 
-    private Document mapDocument(DocumentsRecord record) {
+    private boolean recordExists(UUID id) {
+        return dsl.fetchExists(dsl.selectOne().from(DOCUMENTS).where(DOCUMENTS.ID.eq(id)));
+    }
+
+    private Document mapDocument(Record record) {
+        DocumentsRecord documentsRecord = record.into(DOCUMENTS);
         return Document.builder()
-            .id(fromBytes(record.getId()))
-            .clientId(fromBytes(record.getClientId()))
-            .title(record.getTitle())
-            .content(record.getContent())
-            .createdAt(toOffsetDateTime(record.getCreatedAt()))
+            .id(documentsRecord.getId())
+            .clientId(documentsRecord.getClientId())
+            .title(documentsRecord.getTitle())
+            .content(documentsRecord.getContent())
+            .createdAt(toUtc(documentsRecord.getCreatedAt()))
             .build();
     }
 
-    private java.time.LocalDateTime toLocalDateTime(OffsetDateTime dateTime) {
-        return dateTime == null ? null : dateTime.toLocalDateTime();
-    }
-
-    private OffsetDateTime toOffsetDateTime(java.time.LocalDateTime dateTime) {
-        return dateTime == null ? null : dateTime.atOffset(ZoneOffset.UTC);
+    private OffsetDateTime toUtc(OffsetDateTime dateTime) {
+        return dateTime == null ? null : dateTime.withOffsetSameInstant(ZoneOffset.UTC);
     }
 }

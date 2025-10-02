@@ -1,15 +1,15 @@
-spring:
+﻿spring:
   application:
     name: wealth-search-engine
   datasource:
-    url: jdbc:h2:mem:wealthsearch;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/wealthsearch}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:wealth}
+    password: ${SPRING_DATASOURCE_PASSWORD:wealth}
   flyway:
     locations: classpath:db/migration
   jooq:
-    sql-dialect: H2
+    sql-dialect: POSTGRES
 
 logging:
   level:

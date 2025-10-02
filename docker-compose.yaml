@@ -2,14 +2,21 @@ version: "3.9"
 
 services:
   db:
-    image: pgvector/pgvector:pg16
+    image: postgres:16-alpine
     container_name: db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres
+      POSTGRES_DB: wealthsearch
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d wealthsearch"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
   ollama:
     image: ollama/ollama:latest
@@ -19,17 +26,12 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     environment:
-      # чтобы не тянул большие модели случайно, держим всё локально
       OLLAMA_KEEP_ALIVE: "24h"
     command: >
       /bin/sh -lc "
         ollama serve &
-        # ждём порт
         until nc -z localhost 11434; do sleep 1; done;
-        # подтягиваем нужные модели
-        ollama pull ${OLLAMA_TEXT_MODEL} || true;
-        # эмбеддинги тебе тут не обязательны, но вдруг
-        # ollama pull nomic-embed-text || true;
+        ollama pull ${OLLAMA_TEXT_MODEL:-llama3.1} || true;
         wait -n
       "
     healthcheck:
@@ -49,11 +51,15 @@ services:
       ollama:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wealthsearch
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
       OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_TEXT_MODEL: ${OLLAMA_TEXT_MODEL}
-      # при желании: LOG_LEVEL=INFO
+      OLLAMA_TEXT_MODEL: ${OLLAMA_TEXT_MODEL:-llama3.1}
     ports:
       - "8080:8080"
+
+volumes:
+  db_data:
+  ollama_data:
+
