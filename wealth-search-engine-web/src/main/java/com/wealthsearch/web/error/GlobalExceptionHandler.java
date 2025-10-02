@@ -1,6 +1,8 @@
 package com.wealthsearch.web.error;
 
-import com.wealthsearch.api.exception.ClientAlreadyExistsException;
+import com.wealthsearch.model.exception.BadRequestException;
+import com.wealthsearch.model.exception.ClientAlreadyExistsException;
+import com.wealthsearch.model.error.ErrorEntry;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -17,51 +19,58 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<List<ApiError>> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
-        List<ApiError> errors = mergeBindingErrors(exception.getBindingResult());
+    public ResponseEntity<List<ErrorEntry>> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
+        List<ErrorEntry> errors = mergeBindingErrors(exception.getBindingResult());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                              .body(fallbackIfEmpty(errors));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<List<ApiError>> handleConstraintViolation(ConstraintViolationException exception) {
-        List<ApiError> errors = exception.getConstraintViolations()
-                                         .stream()
-                                         .map(violation -> new ApiError(
-                                                 ErrorMessage.CONSTRAINT_VIOLATION.format(violation.getPropertyPath(),
-                                                                                          violation.getMessage())))
-                                         .toList();
+    public ResponseEntity<List<ErrorEntry>> handleConstraintViolation(ConstraintViolationException exception) {
+        List<ErrorEntry> errors = exception.getConstraintViolations()
+                                           .stream()
+                                           .map(violation -> new ErrorEntry(
+                                                   ErrorMessage.CONSTRAINT_VIOLATION.format(violation.getPropertyPath(),
+                                                                                            violation.getMessage())))
+                                           .toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                              .body(fallbackIfEmpty(errors));
     }
 
     @ExceptionHandler(ClientAlreadyExistsException.class)
-    public ResponseEntity<List<ApiError>> handleClientAlreadyExists(ClientAlreadyExistsException exception) {
+    public ResponseEntity<List<ErrorEntry>> handleClientAlreadyExists(ClientAlreadyExistsException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                             .body(List.of(new ApiError(exception.getMessage())));
+                             .body(List.of(new ErrorEntry(exception.getMessage())));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<List<ErrorEntry>> handleBadRequest(BadRequestException exception) {
+        log.error("Bad request: ", exception);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(fallbackIfEmpty(exception.getErrors()));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<List<ApiError>> handleUnexpected(Exception exception) {
+    public ResponseEntity<List<ErrorEntry>> handleUnexpected(Exception exception) {
         log.error("Unexpected error", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body(List.of(new ApiError(ErrorMessage.INTERNAL_ERROR.message())));
+                             .body(List.of(new ErrorEntry(ErrorMessage.INTERNAL_ERROR.message())));
     }
 
-    private List<ApiError> mergeBindingErrors(BindingResult bindingResult) {
+    private List<ErrorEntry> mergeBindingErrors(BindingResult bindingResult) {
         return Stream.concat(bindingResult.getFieldErrors()
                                           .stream()
-                                          .map(error -> new ApiError(
+                                          .map(error -> new ErrorEntry(
                                                   ErrorMessage.FIELD_VALIDATION_ERROR.format(error.getField(),
                                                                                              error.getDefaultMessage()))),
                              bindingResult.getGlobalErrors()
                                           .stream()
-                                          .map(error -> new ApiError(
+                                          .map(error -> new ErrorEntry(
                                                   ErrorMessage.GLOBAL_VALIDATION_ERROR.format(error.getDefaultMessage()))))
                      .toList();
     }
 
-    private List<ApiError> fallbackIfEmpty(List<ApiError> errors) {
-        return errors.isEmpty() ? List.of(new ApiError(ErrorMessage.INTERNAL_ERROR.message())) : errors;
+    private List<ErrorEntry> fallbackIfEmpty(List<ErrorEntry> errors) {
+        return errors.isEmpty() ? List.of(new ErrorEntry(ErrorMessage.INTERNAL_ERROR.message())) : errors;
     }
 }

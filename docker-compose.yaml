@@ -1,4 +1,4 @@
-version: "3.9"
+﻿version: "3.9"
 
 services:
   db:
@@ -10,35 +10,30 @@ services:
       POSTGRES_DB: wealthsearch
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d wealthsearch"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-    volumes:
-      - db_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
       - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
+    pull_policy: always
+    tty: true
     environment:
-      OLLAMA_KEEP_ALIVE: "24h"
-    command: >
-      /bin/sh -lc "
-        ollama serve &
-        until nc -z localhost 11434; do sleep 1; done;
-        ollama pull ${OLLAMA_TEXT_MODEL:-llama3.1} || true;
-        wait -n
-      "
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:11434/api/tags >/dev/null 2>&1 || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes:
+      - ./ollama_data:/root/.ollama
+      - ./entrypoint.sh:/entrypoint.sh
+    entrypoint: [ "/usr/bin/bash", "/entrypoint.sh" ]
 
   app:
     build:
@@ -58,8 +53,4 @@ services:
       OLLAMA_TEXT_MODEL: ${OLLAMA_TEXT_MODEL:-llama3.1}
     ports:
       - "8080:8080"
-
-volumes:
-  db_data:
-  ollama_data:
 

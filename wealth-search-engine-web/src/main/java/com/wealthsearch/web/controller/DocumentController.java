@@ -29,8 +29,6 @@ public class DocumentController {
         @PathVariable("clientId") UUID clientId,
         @Valid @RequestBody Document document
     ) {
-        Objects.requireNonNull(document, "document must not be null");
-
         Document documentForClient = document.toBuilder()
             .clientId(clientId)
             .build();

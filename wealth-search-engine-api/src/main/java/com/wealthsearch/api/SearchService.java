@@ -1,9 +1,9 @@
 package com.wealthsearch.api;
 
-import com.wealthsearch.model.SearchHit;
+import com.wealthsearch.model.ClientSearchHit;
 import java.util.List;
 
 public interface SearchService {
 
-    List<SearchHit> search(String query);
+    List<ClientSearchHit> searchClientsPerCompanyName(String query);
 }

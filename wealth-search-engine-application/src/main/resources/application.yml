@@ -4,8 +4,8 @@
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/wealthsearch}
     driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:wealth}
-    password: ${SPRING_DATASOURCE_PASSWORD:wealth}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
   flyway:
     locations: classpath:db/migration
   jooq:
@@ -18,3 +18,37 @@ logging:
 
 server:
   port: 8080
+
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  text-model: ${OLLAMA_TEXT_MODEL:llama3.1}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ollama:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 30s
+        recordExceptions:
+          - com.wealthsearch.client.ollama.ResilientOllamaWebClient$OllamaClientException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+
+  retry:
+    instances:
+      ollama:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - com.wealthsearch.client.ollama.ResilientOllamaWebClient$OllamaClientException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException

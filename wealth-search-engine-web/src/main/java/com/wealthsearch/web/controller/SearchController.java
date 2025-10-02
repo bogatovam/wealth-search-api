@@ -1,7 +1,7 @@
 package com.wealthsearch.web.controller;
 
 import com.wealthsearch.api.SearchService;
-import com.wealthsearch.model.SearchHit;
+import com.wealthsearch.model.ClientSearchHit;
 import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ public class SearchController {
     }
 
     @GetMapping
-    public List<SearchHit> search(@RequestParam("q") String query) {
-        return searchService.search(query);
+    public List<ClientSearchHit> search(@RequestParam("q") String query) {
+        return searchService.searchClientsPerCompanyName(query);
     }
 }

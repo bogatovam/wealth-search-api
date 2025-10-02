@@ -1,6 +1,8 @@
 package com.wealthsearch.db.repository;
 
 import com.wealthsearch.model.Client;
+import com.wealthsearch.model.ClientSearchHit;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,5 +13,5 @@ public interface ClientRepository {
 
     Optional<Client> findById(UUID clientId);
 
-    List<Client> findByEmailDomainFragment(String domain);
+    List<ClientSearchHit> findByEmailDomainFragment(String domain);
 }

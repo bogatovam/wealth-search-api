@@ -1,0 +1,256 @@
+{
+  "info": {
+    "name": "Wealth Search Engine Seed Data",
+    "description": "Collection for repeatedly seeding sample clients and documents in the Wealth Search Engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "6f8d9f5e-3b0a-48c0-af44-02a4774d3fe2"
+  },
+  "item": [
+    {
+      "name": "Create Client",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const fallbackClient = () => {",
+              "    const randomOf = (items) => items[Math.floor(Math.random() * items.length)];",
+              "    const firstNames = ['Nikita', 'Elena', 'Dario', 'Priya', 'Jonas', 'Mei', 'Gabriela', 'Omar', 'Anya', 'Mateo'];",
+              "    const lastNames = ['Lebedev', 'Harrington', 'Fujimoto', 'Singh', 'Bergstrom', 'Okoye', 'Costa', 'Sato', 'Mwangi', 'Bernard'];",
+              "    const sectors = ['cross-border estate planning practice', 'clean energy venture fund', 'sovereign wealth advisory desk', 'family office education initiative', 'emerging market fintech accelerator'];",
+              "    const firstName = randomOf(firstNames);",
+              "    const lastName = randomOf(lastNames);",
+              "    const domain = `${lastName}${Math.floor(Math.random() * 90 + 10)}.wealth`;",
+              "    const isoCountries = ['CH', 'SG', 'GB', 'US', 'CA', 'AE', 'DE'];",
+              "    const email = `${firstName}.${lastName}@${domain}`.toLowerCase();",
+              "    const summary = `${firstName} ${lastName} leads a ${randomOf(sectors)}.`;",
+              "    setClientPayload({",
+              "        firstName,
+              "        lastName,
+              "        email,
+              "        countryOfResidence: randomOf(isoCountries),
+              "        companySummary: summary,
+              "        documentIdea: 'Design a memorandum highlighting pipeline diligence and next-step capital actions.'",
+              "    });",
+              "};",
+              "const sanitize = (value) => (value || '').toString().replace(/\\s+/g, ' ').trim();",
+              "const setClientPayload = (payload) => {",
+              "    pm.collectionVariables.unset('client_id');",
+              "    pm.collectionVariables.set('client_first_name', sanitize(payload.firstName));",
+              "    pm.collectionVariables.set('client_last_name', sanitize(payload.lastName));",
+              "    pm.collectionVariables.set('client_email', payload.email.toLowerCase());",
+              "    pm.collectionVariables.set('client_country', payload.countryOfResidence.toUpperCase());",
+              "    pm.collectionVariables.set('client_company_summary', sanitize(payload.companySummary) || 'Dynamic client initiative.');",
+              "    pm.collectionVariables.set('client_document_idea', sanitize(payload.documentIdea) || 'Outline next-stage advisory actions.');",
+              "};",
+              "const useLlm = () => {",
+              "    const baseUrl = pm.collectionVariables.get('llm_base_url');",
+              "    const model = pm.collectionVariables.get('llm_model');",
+              "    if (!baseUrl || !model) {",
+              "        fallbackClient();",
+              "        return;
+              "    }
+              "    const prompt = [",
+              "        'You are enriching a wealth management CRM. Produce a JSON object strictly matching com.wealthsearch.model.Client fields plus helper metadata.',",
+              "        'Use keys: firstName, lastName, email, countryOfResidence (ISO alpha-2), companySummary (2 lively sentences), documentIdea (memo subject to explore).',",
+              "        'Ensure email domain reflects a boutique advisory brand, avoid spaces in email, and return ONLY valid JSON without markdown.'
+              "    ].join(' ');
+              "    const body = { model, prompt, stream: false, options: { temperature: 0.8 } };
+              "    pm.sendRequest({",
+              "        url: `${baseUrl}/api/generate`,",
+              "        method: 'POST',",
+              "        header: { 'Content-Type': 'application/json' },",
+              "        body: { mode: 'raw', raw: JSON.stringify(body) }
+              "    }, (err, res) => {
+              "        if (err || !res || !res.ok) {
+              "            console.warn('LLM request failed, using fallback data', err && err.message);
+              "            fallbackClient();
+              "            return;
+              "        }
+              "        try {
+              "            const parsed = res.json();
+              "            const candidate = parsed.response || parsed.text || '';",
+              "            const jsonMatch = candidate.match(/\{[\s\S]*\}/);
+              "            const payload = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(candidate);
+              "            if (!payload.firstName || !payload.lastName || !payload.email) {
+              "                throw new Error('Incomplete payload from LLM');
+              "            }
+              "            setClientPayload(payload);
+              "        } catch (parseError) {
+              "            console.warn('Failed to parse LLM payload, using fallback', parseError.message);
+              "            fallbackClient();
+              "        }
+              "    });
+              "};",
+              "useLlm();"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Client created (201)', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const response = pm.response.json();",
+              "pm.test('Response contains client id', function () {",
+              "    pm.expect(response).to.have.property('id');",
+              "});",
+              "pm.collectionVariables.set('client_id', response.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"{{client_first_name}}\",\n  \"lastName\": \"{{client_last_name}}\",\n  \"email\": \"{{client_email}}\",\n  \"countryOfResidence\": \"{{client_country}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/clients",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "clients"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Document for Client",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const clientId = pm.collectionVariables.get('client_id');",
+              "if (!clientId) {",
+              "    throw new Error('client_id is missing. Run \"Create Client\" first.');",
+              "}",
+              "const fallbackDocument = () => {
+              "    const clientName = `${pm.collectionVariables.get('client_first_name')} ${pm.collectionVariables.get('client_last_name')}`;
+              "    const title = `Strategic Briefing: ${clientName}`;
+              "    const paragraphs = [
+              "        `${clientName} is refining their ${pm.collectionVariables.get('client_company_summary')?.toLowerCase() || 'new initiative'}.`,",
+              "        'Agenda covers compliance checkpoints, talent coverage, and investor communications in the next quarter.',",
+              "        'Action items: align tax counsel, confirm treasury counterparties, and deliver updated KPI dashboard.'
+              "    ];
+              "    setDocumentPayload({ title, content: paragraphs.join(' ') });
+              "};",
+              "const escapeForJson = (text) => text.replace(/\\\\/g, '\\\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');",
+              "const setDocumentPayload = (payload) => {
+              "    pm.collectionVariables.set('document_title', escapeForJson(payload.title));
+              "    pm.collectionVariables.set('document_content', escapeForJson(payload.content));
+              "};",
+              "const baseUrl = pm.collectionVariables.get('llm_base_url');",
+              "const model = pm.collectionVariables.get('llm_model');",
+              "if (!baseUrl || !model) {
+              "    fallbackDocument();
+              "    return;
+              "}
+              "const prompt = [
+              "    'Craft a JSON object describing a document for com.wealthsearch.model.Document with fields title and content.',",
+              "    `Client summary: ${pm.collectionVariables.get('client_company_summary')}.`,",
+              "    `Planning idea: ${pm.collectionVariables.get('client_document_idea')}.`,",
+              "    'Title format: short headline (≤80 chars). Content: 3 vivid sentences with advisory tone. Return ONLY JSON.'
+              "].join(' ');
+              "const body = { model, prompt, stream: false, options: { temperature: 0.75 } };
+              "pm.sendRequest({
+              "    url: `${baseUrl}/api/generate`,
+              "    method: 'POST',
+              "    header: { 'Content-Type': 'application/json' },
+              "    body: { mode: 'raw', raw: JSON.stringify(body) }
+              "}, (err, res) => {
+              "    if (err || !res || !res.ok) {
+              "        console.warn('LLM request for document failed, using fallback.', err && err.message);
+              "        fallbackDocument();
+              "        return;
+              "    }
+              "    try {
+              "        const parsed = res.json();
+              "        const candidate = parsed.response || parsed.text || '';
+              "        const jsonMatch = candidate.match(/\{[\s\S]*\}/);
+              "        const payload = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(candidate);
+              "        if (!payload.title || !payload.content) {
+              "            throw new Error('Incomplete document payload from LLM');
+              "        }
+              "        setDocumentPayload(payload);
+              "    } catch (parseError) {
+              "        console.warn('Failed to parse document payload, reverting to fallback.', parseError.message);
+              "        fallbackDocument();
+              "    }
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Document created (201)', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const response = pm.response.json();",
+              "pm.test('Response contains document id', function () {",
+              "    pm.expect(response).to.have.property('id');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"{{document_title}}\",\n  \"content\": \"{{document_content}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/clients/{{client_id}}/documents",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "clients",
+            "{{client_id}}",
+            "documents"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "llm_base_url",
+      "value": "http://localhost:11434",
+      "description": "Base URL of the local Ollama service (or any compatible text-generation API supporting /api/generate)."
+    },
+    {
+      "key": "llm_model",
+      "value": "llama3",
+      "description": "Model identifier understood by the configured LLM endpoint."
+    }
+  ]
+}

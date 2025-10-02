@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.wealthsearch.model.ClientSearchHit;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -44,6 +46,8 @@ public class JooqClientRepository implements ClientRepository {
                                      .map(code -> code.toUpperCase(Locale.ROOT))
                                      .orElse(null);
 
+        String domainName = extractDomainName(email);
+
         OffsetDateTime createdAt = Optional.ofNullable(client.getCreatedAt())
                                            .map(this::toUtc)
                                            .orElseGet(() -> OffsetDateTime.now(ZoneOffset.UTC));
@@ -54,6 +58,7 @@ public class JooqClientRepository implements ClientRepository {
                                   .set(CLIENTS.LAST_NAME, client.getLastName())
                                   .set(CLIENTS.EMAIL, email)
                                   .set(CLIENTS.COUNTRY_OF_RESIDENCE, countryCode)
+                                  .set(CLIENTS.DOMAIN_NAME, domainName)
                                   .set(CLIENTS.CREATED_AT, createdAt)
                                   .returning()
                                   .fetchOptional()
@@ -70,20 +75,8 @@ public class JooqClientRepository implements ClientRepository {
     }
 
     @Override
-    public List<Client> findByEmailDomainFragment(String domain) {
-        String normalized = domain.toLowerCase(Locale.ROOT)
-                                  .replaceAll("[^a-z0-9]", "");
-        if (normalized.isEmpty()) {
-            return List.of();
-        }
-        String likePattern = "%" + normalized + "%";
-
-        Field<String> sanitizedEmail =
-                DSL.replace(DSL.replace(DSL.replace(DSL.lower(CLIENTS.EMAIL), "@", ""), ".", ""), "-", "");
-
-        return dsl.selectFrom(CLIENTS)
-                  .where(sanitizedEmail.like(likePattern))
-                  .fetch(this::mapClient);
+    public List<ClientSearchHit> findByEmailDomainFragment(String query) {
+        return null;
     }
 
     private boolean recordExistsById(UUID id) {
@@ -106,8 +99,29 @@ public class JooqClientRepository implements ClientRepository {
                      .lastName(clientsRecord.getLastName())
                      .email(clientsRecord.getEmail())
                      .countryOfResidence(clientsRecord.getCountryOfResidence())
+                     .domainName(clientsRecord.getDomainName())
                      .createdAt(toUtc(clientsRecord.getCreatedAt()))
                      .build();
+    }
+
+    private String extractDomainName(String email) {
+        if (email == null || email.isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+
+        int atIndex = email.indexOf('@');
+        if (atIndex == -1 || atIndex == email.length() - 1) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+
+        String domainPart = email.substring(atIndex + 1);
+        int dotIndex = domainPart.indexOf('.');
+
+        if (dotIndex == -1) {
+            return domainPart;
+        }
+
+        return domainPart.substring(0, dotIndex);
     }
 
     private OffsetDateTime toUtc(OffsetDateTime dateTime) {

@@ -66,6 +66,10 @@ public class Client {
     @Schema(description = "ISO country code where the client resides", example = "CH")
     private String countryOfResidence;
 
+    @Column(name = Clients.COLUMN_DOMAIN_NAME, nullable = false, length = 128)
+    @Schema(description = "Email domain name extracted from email", example = "neviswealth", accessMode = Schema.AccessMode.READ_ONLY)
+    private String domainName;
+
     @Column(name = Clients.COLUMN_CREATED_AT, nullable = false, columnDefinition = ColumnDefinition.TIMESTAMP_WITH_TIME_ZONE, updatable = false)
     @Schema(description = "Timestamp when the client record was created", accessMode = Schema.AccessMode.READ_ONLY)
     private OffsetDateTime createdAt;

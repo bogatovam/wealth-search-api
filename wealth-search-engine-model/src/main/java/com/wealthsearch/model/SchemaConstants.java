@@ -13,6 +13,7 @@ public final class SchemaConstants {
         public static final String COLUMN_LAST_NAME = "last_name";
         public static final String COLUMN_EMAIL = "email";
         public static final String COLUMN_COUNTRY_OF_RESIDENCE = "country_of_residence";
+        public static final String COLUMN_DOMAIN_NAME = "domain_name";
         public static final String COLUMN_CREATED_AT = "created_at";
 
         private Clients() {
