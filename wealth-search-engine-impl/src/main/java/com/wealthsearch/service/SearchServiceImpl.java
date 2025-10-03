@@ -1,12 +1,14 @@
 package com.wealthsearch.service;
 
 import com.wealthsearch.api.SearchService;
+import com.wealthsearch.client.ollama.SemanticSearchQueryExpander;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.db.repository.DocumentRepository;
 import com.wealthsearch.model.ClientSearchHit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.wealthsearch.model.DocumentSearchHit;
 import com.wealthsearch.model.PaginationParams;
@@ -27,6 +29,8 @@ public class SearchServiceImpl implements SearchService {
     private final ClientRepository clientRepository;
 
     private final DocumentRepository documentRepository;
+
+    private final SemanticSearchQueryExpander searchQueryExpander;
 
     @Value("${search.clients-search.max-query-length:128}")
     private Long maxQueryLength;
@@ -55,7 +59,8 @@ public class SearchServiceImpl implements SearchService {
             throw new BadRequestException("Query does not contain searchable characters");
         }
 
-        return documentRepository.searchByContent(List.of(normalizedQuery), paginationParams);
+        Set<String> searchTerms = searchQueryExpander.expandQueryWithSynonyms(query);
+        return documentRepository.searchByContent(searchTerms, paginationParams);
     }
 
     private void validateQuery(String query) {

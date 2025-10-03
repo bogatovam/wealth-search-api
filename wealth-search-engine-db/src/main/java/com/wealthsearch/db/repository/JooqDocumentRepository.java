@@ -3,12 +3,13 @@ package com.wealthsearch.db.repository;
 import static com.wealthsearch.db.jooq.tables.Documents.DOCUMENTS;
 
 import com.wealthsearch.db.jooq.tables.records.DocumentsRecord;
-import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
+import com.wealthsearch.model.exception.EntityAlreadyExistsException;
 import com.wealthsearch.model.Document;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.wealthsearch.model.DocumentSearchHit;
@@ -61,7 +62,7 @@ public class JooqDocumentRepository implements DocumentRepository {
     }
 
     @Override
-    public SearchResult<DocumentSearchHit> searchByContent(List<String> searchTerms, PaginationParams pagination) {
+    public SearchResult<DocumentSearchHit> searchByContent(Set<String> searchTerms, PaginationParams pagination) {
         if (searchTerms == null || searchTerms.isEmpty()) {
             return emptySearchResult();
         }
@@ -76,7 +77,7 @@ public class JooqDocumentRepository implements DocumentRepository {
                            .build();
     }
 
-    private FullTextSearchContext buildFullTextSearchContext(List<String> searchTerms) {
+    private FullTextSearchContext buildFullTextSearchContext(Set<String> searchTerms) {
         String searchQuery = String.join(" OR ", searchTerms);
         var tsquery = createTsQuery(searchQuery);
         var tsvField = DSL.field("tsv");

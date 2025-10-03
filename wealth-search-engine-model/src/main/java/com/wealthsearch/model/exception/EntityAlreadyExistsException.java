@@ -1,4 +1,4 @@
-package com.wealthsearch.db.repository.exception;
+package com.wealthsearch.model.exception;
 
 public class EntityAlreadyExistsException extends RuntimeException {
 

@@ -7,6 +7,8 @@ import com.wealthsearch.model.Document;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.wealthsearch.model.DocumentSummaryProcessItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +31,19 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         clientRepository.findById(clientId)
-            .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+                        .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
 
         Document toPersist = document.toBuilder()
-            .id(null)
-            .clientId(clientId)
-            .build();
+                                     .id(null)
+                                     .clientId(clientId)
+                                     .build();
 
         return documentRepository.save(toPersist);
+    }
+
+    @Override
+    public DocumentSummaryProcessItem generateSummaryForDocument(UUID clientId, UUID documentId) {
+
+        return null;
     }
 }

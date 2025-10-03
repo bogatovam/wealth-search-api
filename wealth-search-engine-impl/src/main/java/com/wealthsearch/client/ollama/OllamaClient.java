@@ -2,8 +2,8 @@ package com.wealthsearch.client.ollama;
 
 import com.wealthsearch.client.ollama.dto.OllamaEmbedRequest;
 import com.wealthsearch.client.ollama.dto.OllamaEmbedResponse;
-import com.wealthsearch.client.ollama.dto.OllamaGenerateRequest;
 import com.wealthsearch.client.ollama.dto.OllamaGenerateResponse;
+import org.springframework.ai.ollama.api.OllamaApi;
 
 /**
  * Client interface for interacting with Ollama API.
@@ -16,7 +16,7 @@ public interface OllamaClient {
      * @param request the generation request
      * @return the generation response
      */
-    OllamaGenerateResponse generate(OllamaGenerateRequest request);
+    OllamaGenerateResponse generate(OllamaApi.ChatRequest request);
 
     /**
      * Generate embeddings using Ollama.
@@ -25,11 +25,4 @@ public interface OllamaClient {
      * @return the embedding response
      */
     OllamaEmbedResponse embed(OllamaEmbedRequest request);
-
-    /**
-     * Check if Ollama service is available.
-     *
-     * @return true if service is available
-     */
-    boolean isHealthy();
 }

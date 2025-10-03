@@ -9,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -40,7 +39,6 @@ public class Document {
     private UUID id;
 
     @Column(name = Documents.COLUMN_CLIENT_ID, nullable = false, columnDefinition = ColumnDefinition.UUID)
-    @NotNull
     @Schema(description = "Identifier of the client owning the document", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID clientId;
 

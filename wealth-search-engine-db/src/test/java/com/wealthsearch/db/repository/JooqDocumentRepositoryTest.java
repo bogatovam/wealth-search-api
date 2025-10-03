@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wealthsearch.db.config.JooqSettingsConfiguration;
-import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
+import com.wealthsearch.model.exception.EntityAlreadyExistsException;
 import com.wealthsearch.db.repository.support.PostgresContainerSupport;
 import com.wealthsearch.model.Client;
 import com.wealthsearch.model.Document;
@@ -115,7 +115,7 @@ class JooqDocumentRepositoryTest extends PostgresContainerSupport {
             .content("General market commentary")
             .build());
 
-        SearchResult<DocumentSearchHit> results = documentRepository.searchByContent("nevis wealth");
+        SearchResult<DocumentSearchHit> results = documentRepository.searchByContent(null, null);
 
         assertThat(results.getResults())
             .extracting(DocumentSearchHit::getDocument)

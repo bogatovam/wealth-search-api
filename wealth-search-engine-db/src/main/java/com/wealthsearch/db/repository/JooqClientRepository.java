@@ -3,8 +3,8 @@ package com.wealthsearch.db.repository;
 import static com.wealthsearch.db.jooq.tables.Clients.CLIENTS;
 
 import com.wealthsearch.db.jooq.tables.records.ClientsRecord;
-import com.wealthsearch.db.repository.exception.DuplicateClientEmailException;
-import com.wealthsearch.db.repository.exception.EntityAlreadyExistsException;
+import com.wealthsearch.model.exception.DuplicateClientEmailException;
+import com.wealthsearch.model.exception.EntityAlreadyExistsException;
 import com.wealthsearch.model.*;
 
 import java.time.OffsetDateTime;

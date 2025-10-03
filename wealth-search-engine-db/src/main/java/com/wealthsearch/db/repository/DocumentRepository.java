@@ -6,12 +6,14 @@ import com.wealthsearch.model.PaginationParams;
 import com.wealthsearch.model.SearchResult;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface DocumentRepository {
+
     Document save(Document document);
 
     List<Document> findByClientId(UUID clientId);
 
-    SearchResult<DocumentSearchHit> searchByContent(List<String> searchTerms, PaginationParams pagination);
+    SearchResult<DocumentSearchHit> searchByContent(Set<String> searchTerms, PaginationParams pagination);
 }

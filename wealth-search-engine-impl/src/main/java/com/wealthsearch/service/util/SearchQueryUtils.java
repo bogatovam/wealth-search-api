@@ -1,13 +1,14 @@
 package com.wealthsearch.service.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.wealthsearch.client.ollama.FtsQueryExpandResult;
 import jakarta.validation.constraints.NotNull;
+import org.apache.commons.lang3.StringUtils;
 
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Utility methods for grooming user-provided search queries before processing.
@@ -58,5 +59,11 @@ public final class SearchQueryUtils {
 
     public static String removeSpaces(String query) {
         return query.replaceAll(" ", "");
+    }
+
+    public static void collectTerms(List<String> synonyms, Set<String> terms) {
+        terms.addAll(synonyms.stream()
+                             .filter(StringUtils::isNoneBlank)
+                             .toList());
     }
 }

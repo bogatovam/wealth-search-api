@@ -2,17 +2,14 @@ package com.wealthsearch.web.controller;
 
 import com.wealthsearch.api.DocumentService;
 import com.wealthsearch.model.Document;
+import com.wealthsearch.model.DocumentSummaryProcessItem;
 import jakarta.validation.Valid;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/clients/{clientId}/documents")
@@ -25,17 +22,21 @@ public class DocumentController {
     }
 
     @PostMapping
-    public ResponseEntity<Document> createDocument(
-        @PathVariable("clientId") UUID clientId,
-        @Valid @RequestBody Document document
-    ) {
+    public ResponseEntity<Document> createDocument(@PathVariable("clientId") UUID clientId,
+            @Valid @RequestBody Document document) {
         Document documentForClient = document.toBuilder()
-            .clientId(clientId)
-            .build();
+                                             .clientId(clientId)
+                                             .build();
 
         Document created = documentService.createDocument(documentForClient);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, "/clients/" + clientId + "/documents/" + created.getId());
-        return new ResponseEntity<>(created, headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
+
+    @GetMapping("/{documentId}")
+    public ResponseEntity<DocumentSummaryProcessItem> requestSummary(@PathVariable("clientId") UUID clientId,
+                                                                     @PathVariable("documentId") UUID documentId) {
+
+        return new ResponseEntity<>(documentService.generateSummaryForDocument(clientId, documentId), HttpStatus.OK);
+    }
+
 }

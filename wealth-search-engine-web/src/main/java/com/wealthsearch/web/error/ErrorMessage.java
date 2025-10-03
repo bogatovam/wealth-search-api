@@ -6,6 +6,7 @@ public enum ErrorMessage {
     FIELD_VALIDATION_ERROR("Validation failed for field '%s': %s"),
     GLOBAL_VALIDATION_ERROR("Validation failed: %s"),
     CONSTRAINT_VIOLATION("Constraint violation at '%s': %s"),
+    OLLAMA_SERVICE_ERROR("Ollama service error: %s"),
     INTERNAL_ERROR("Unexpected error occurred");
 
     private final String template;

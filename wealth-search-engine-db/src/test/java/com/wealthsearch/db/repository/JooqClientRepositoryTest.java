@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wealthsearch.db.config.JooqSettingsConfiguration;
-import com.wealthsearch.db.repository.exception.DuplicateClientEmailException;
+import com.wealthsearch.model.exception.DuplicateClientEmailException;
 import com.wealthsearch.db.repository.support.PostgresContainerSupport;
 import com.wealthsearch.model.Client;
 import com.wealthsearch.model.ClientSearchHit;
