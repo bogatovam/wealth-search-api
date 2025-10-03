@@ -6,7 +6,7 @@
 - Swagger UI (running app): `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON (running app): `http://localhost:8080/v3/api-docs`
 - Swagger spec (snapshot): `docs/swagger-spec.json`
-- 
+
 ## Features
 
 ### 1. Client Search by Company Domain
@@ -256,7 +256,7 @@ Completed:
 - **Database**: PostgreSQL 15+ with pg_trgm extension
 - **ORM**: jOOQ 3.19.10
 - **AI**: Spring AI + Ollama
-- **Resilience**: Resilience4j (Circuit Breaker, Retry)
+- **Resilience**: Resilience4j (Circuit Breaker)
 - **Testing**: JUnit 5, Mockito, Testcontainers
 
 ## Assumptions
@@ -264,5 +264,4 @@ Completed:
 - Search is case-insensitive
 - All timestamps in UTC
 - Email domains automatically extracted and normalized
-- Special characters in queries handled gracefully
 - Ollama integration optional (graceful degradation)
