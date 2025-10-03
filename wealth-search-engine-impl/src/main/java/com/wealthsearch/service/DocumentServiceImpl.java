@@ -1,7 +1,6 @@
 package com.wealthsearch.service;
 
 import com.wealthsearch.api.DocumentService;
-import com.wealthsearch.api.ollama.client.OllamaClient;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.db.repository.DocumentRepository;
 import com.wealthsearch.db.repository.DocumentSummaryProcessItemRepository;
@@ -9,7 +8,6 @@ import com.wealthsearch.model.entity.Document;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
@@ -75,7 +73,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             lockAutoClosable.tryLock(20);
 
-            var activeGeneration = summaryProcessItemRepository.findActive(documentId);
+            var activeGeneration = summaryProcessItemRepository.findById(documentId);
 
             DocumentSummaryProcessItem documentSummaryProcessItem;
             if (activeGeneration.isPresent()) {

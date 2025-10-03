@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wealthsearch.api.ollama.client.OllamaClient;
 import com.wealthsearch.model.ollama.FtsQueryExpandResult;
 import com.wealthsearch.model.exception.OllamaClientException;
+import com.wealthsearch.model.ollama.SummaryResult;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -42,30 +43,20 @@ public class SpringAiOllamaClient implements OllamaClient {
 
     @Override
     public FtsQueryExpandResult generate(Prompt prompt) {
-        return executeWithResilience(() -> generateInternal(prompt), "generate");
+        return executeWithResilience(() -> generateInternal(prompt, FtsQueryExpandResult.class), "generate");
     }
 
     @Override
-    public String generateAsText(Prompt prompt) {
-        return executeWithResilience(() -> generateInternalAsText(prompt), "generate");
+    public SummaryResult generateSummary(Prompt prompt) {
+        return executeWithResilience(() -> generateInternal(prompt, SummaryResult.class), "generate");
     }
 
-    private FtsQueryExpandResult generateInternal(Prompt prompt) {
+    private <T> T generateInternal(Prompt prompt, Class<T> clazz) {
         try {
             String content = this.chatClient.prompt(prompt)
                                             .call()
                                             .content();
-            return objectMapper.readValue(content, FtsQueryExpandResult.class);
-        } catch (Exception ex) {
-            throw new OllamaClientException("Failed to generate response", ex);
-        }
-    }
-
-    private String generateInternalAsText(Prompt prompt) {
-        try {
-            return this.chatClient.prompt(prompt)
-                                  .call()
-                                  .content();
+            return objectMapper.readValue(content, clazz);
         } catch (Exception ex) {
             throw new OllamaClientException("Failed to generate response", ex);
         }

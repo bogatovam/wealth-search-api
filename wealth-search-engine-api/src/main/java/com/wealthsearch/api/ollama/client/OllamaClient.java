@@ -1,6 +1,7 @@
 package com.wealthsearch.api.ollama.client;
 
 import com.wealthsearch.model.ollama.FtsQueryExpandResult;
+import com.wealthsearch.model.ollama.SummaryResult;
 import org.springframework.ai.chat.prompt.Prompt;
 
 /**
@@ -16,5 +17,5 @@ public interface OllamaClient {
      */
     FtsQueryExpandResult generate(Prompt prompt);
 
-    String generateAsText(Prompt input);
+    SummaryResult generateSummary(Prompt input);
 }

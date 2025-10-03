@@ -8,13 +8,7 @@ import java.util.UUID;
 
 public interface DocumentSummaryProcessItemRepository {
 
-    Optional<DocumentSummaryProcessItem> findActive(UUID documentId);
-
-    Optional<DocumentSummaryProcessItem> findActiveForUpdate(UUID documentId);
-
-    Optional<DocumentSummaryProcessItem> findLatest(UUID documentId);
-
-    DocumentSummaryProcessItem insert(UUID documentId, DocumentSummaryProcessStatus status, OffsetDateTime createdAt);
+    Optional<DocumentSummaryProcessItem> findById(UUID documentId);
 
     DocumentSummaryProcessItem insertEventOrReturnExisting(UUID documentId);
 

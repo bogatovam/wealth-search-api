@@ -36,6 +36,15 @@ logging:
 server:
   port: 8080
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
 semantic-search:
   prompts:
     synonym-path: classpath:prompts/synonym-query-expand.txt
