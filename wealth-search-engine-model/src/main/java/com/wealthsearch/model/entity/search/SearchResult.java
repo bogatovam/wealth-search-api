@@ -14,8 +14,10 @@ import java.util.List;
 public class SearchResult<T> {
 
     @Schema(description = "List of search results")
+    @Builder.Default
     List<T> results = new ArrayList<>();
 
     @Schema(description = "Total number of matching results", example = "42")
+    @Builder.Default
     long totalCount = 0;
 }

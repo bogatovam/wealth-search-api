@@ -34,6 +34,20 @@ public final class SchemaConstants {
         }
     }
 
+    public static final class DocumentSummaryProcessItems {
+        public static final String TABLE = "document_summary_process_items";
+        public static final String COLUMN_ID = "id";
+        public static final String COLUMN_DOCUMENT_ID = "document_id";
+        public static final String COLUMN_STATUS = "status";
+        public static final String COLUMN_SUMMARY = "summary";
+        public static final String COLUMN_CREATED_AT = "created_at";
+        public static final String COLUMN_COMPLETED_AT = "completed_at";
+
+        private DocumentSummaryProcessItems() {
+            throw new UnsupportedOperationException("Utility class");
+        }
+    }
+
     public static final class ColumnDefinition {
         public static final String UUID = "UUID";
         public static final String TEXT = "TEXT";

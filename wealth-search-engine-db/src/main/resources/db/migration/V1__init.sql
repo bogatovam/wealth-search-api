@@ -10,10 +10,9 @@ CREATE TABLE clients (
     created_at           TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
---CREATE TABLE company_domains (
---    name                 VARCHAR(128) PRIMARY KEY,
---    created_at           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
---);
+CREATE INDEX idx_clients_domain_name_trgm
+    ON clients USING gin (domain_name gin_trgm_ops);
+
 
 CREATE TABLE documents (
     id         UUID                     PRIMARY KEY,

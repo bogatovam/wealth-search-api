@@ -15,6 +15,7 @@ import com.wealthsearch.model.entity.search.PaginationParams;
 import com.wealthsearch.model.entity.search.SearchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -71,12 +72,19 @@ public class JooqDocumentRepository implements DocumentRepository {
 
         var queryContext = buildFullTextSearchContext(searchTerms);
         long totalCount = countMatches(queryContext);
-        List<DocumentSearchHit> results = fetchRankedResults(queryContext, pagination);
+        if (totalCount > 0) {
+            List<DocumentSearchHit> results = fetchRankedResults(queryContext, pagination);
 
-        return SearchResult.<DocumentSearchHit>builder()
-                           .results(results)
-                           .totalCount(totalCount)
-                           .build();
+            return SearchResult.<DocumentSearchHit>builder()
+                               .results(results)
+                               .totalCount(totalCount)
+                               .build();
+        } else {
+            return SearchResult.<DocumentSearchHit>builder()
+                               .results(new ArrayList<>())
+                               .totalCount(totalCount)
+                               .build();
+        }
     }
 
     private FullTextSearchContext buildFullTextSearchContext(Set<String> searchTerms) {
@@ -94,7 +102,7 @@ public class JooqDocumentRepository implements DocumentRepository {
     }
 
     private org.jooq.Field<Double> calculateRank(org.jooq.Field<?> tsvField, org.jooq.Field<Object> tsquery) {
-        return DSL.function("ts_rank_cd", Double.class, tsvField, tsquery, DSL.inline(4))
+        return DSL.function("ts_rank_cd", Double.class, tsvField, tsquery, DSL.inline(0))
                   .as("rank");
     }
 
@@ -138,11 +146,6 @@ public class JooqDocumentRepository implements DocumentRepository {
                            .build();
     }
 
-    private record FullTextSearchContext(org.jooq.Field<Object> tsquery, org.jooq.Condition matchCondition,
-            org.jooq.Field<Double> rankField) {
-    }
-
-
     private boolean recordExists(UUID id) {
         return dsl.fetchExists(dsl.selectOne()
                                   .from(DOCUMENTS)
@@ -152,4 +155,6 @@ public class JooqDocumentRepository implements DocumentRepository {
     private OffsetDateTime toUtc(OffsetDateTime dateTime) {
         return dateTime == null ? null : dateTime.withOffsetSameInstant(ZoneOffset.UTC);
     }
+
+    private record FullTextSearchContext(Field<Object> tsquery, Condition matchCondition, Field<Double> rankField) { }
 }

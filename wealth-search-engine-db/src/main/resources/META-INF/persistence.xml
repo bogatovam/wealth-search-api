@@ -3,6 +3,7 @@
     <persistence-unit name="jooq-unit" transaction-type="RESOURCE_LOCAL">
         <class>com.wealthsearch.model.entity.Client</class>
         <class>com.wealthsearch.model.entity.Document</class>
+        <class>com.wealthsearch.model.entity.DocumentSummaryProcessItem</class>
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
