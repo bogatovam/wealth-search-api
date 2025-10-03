@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -55,6 +56,14 @@ public class GlobalExceptionHandler {
                              .body(List.of(new ErrorEntry(
                                      ErrorMessage.OLLAMA_SERVICE_ERROR.format(exception.getMessage()))));
     }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<List<ErrorEntry>> handleNotFound(NoResourceFoundException exception) {
+        log.error("Unexpected error", exception);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                             .body(List.of(new ErrorEntry("Unknown endpoint")));
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<List<ErrorEntry>> handleUnexpected(Exception exception) {

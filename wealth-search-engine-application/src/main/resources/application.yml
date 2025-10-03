@@ -43,9 +43,9 @@ semantic-search:
 ollama:
   client:
     connect-timeout: 5s
-    read-timeout: 15s
-    response-timeout: 15s
-    write-timeout: 10s
+    read-timeout: 5s
+    response-timeout: 5s
+    write-timeout: 5s
 
 springdoc:
   api-docs:
@@ -61,8 +61,3 @@ resilience4j:
       ollama:
         slidingWindowSize: 10
         waitDurationInOpenState: 10s
-  retry:
-    instances:
-      ollama:
-        maxAttempts: 3
-        waitDuration: 1s

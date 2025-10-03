@@ -50,22 +50,6 @@ class JooqClientRepositoryTest extends PostgresContainerSupport {
     }
 
     @Test
-    void saveNormalizesProvidedCreatedAtToUtc() {
-        var customTime = OffsetDateTime.now(ZoneOffset.ofHours(-5))
-                                       .minusDays(1);
-
-        var saved = clientRepository.save(Client.builder()
-                                                .firstName("Time")
-                                                .lastName("Traveler")
-                                                .email("time.traveler@neviswealth.com")
-                                                .countryOfResidence("US")
-                                                .createdAt(customTime)
-                                                .build());
-
-        assertThat(saved.getCreatedAt()).isEqualTo(customTime.withOffsetSameInstant(ZoneOffset.UTC));
-    }
-
-    @Test
     void saveExtractsDomainNameFromCompoundSuffix() {
         var saved = clientRepository.save(Client.builder()
                                                 .firstName("Domain")

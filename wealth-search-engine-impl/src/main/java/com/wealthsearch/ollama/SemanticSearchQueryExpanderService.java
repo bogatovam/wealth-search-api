@@ -59,7 +59,11 @@ public class SemanticSearchQueryExpanderService implements SemanticSearchQueryEx
 
     @Override
     public Set<String> expandQueryWithSynonyms(String query) {
-        return expansionCache.get(query, this::fetchSynonymExpansions);
+        try {
+            return expansionCache.get(query, this::fetchSynonymExpansions);
+        } catch (Exception e) {
+            return Set.of(query);
+        }
     }
 
     private Set<String> fetchSynonymExpansions(String query) {
@@ -68,7 +72,8 @@ public class SemanticSearchQueryExpanderService implements SemanticSearchQueryEx
 
         FtsQueryExpandResult response = ollamaClient.generate(prompt);
 
-        return this.collectTermsFromOllamaResponse(response);
+        log.info("Ollama generation response {}", response);
+        return this.collectTermsFromOllamaResponse(response, query);
     }
 
     private OllamaOptions buildOllamaRequestWithQuery() {
@@ -83,11 +88,12 @@ public class SemanticSearchQueryExpanderService implements SemanticSearchQueryEx
                       .build();
     }
 
-    private Set<String> collectTermsFromOllamaResponse(FtsQueryExpandResult result) {
+    private Set<String> collectTermsFromOllamaResponse(FtsQueryExpandResult result, String query) {
         Set<String> terms = new LinkedHashSet<>();
         SearchQueryUtils.collectTerms(result.getSynonyms(), terms);
         SearchQueryUtils.collectTerms(result.getNarrower(), terms);
         SearchQueryUtils.collectTerms(result.getRelated(), terms);
+        terms.add(query);
 
         return Set.copyOf(terms);
     }

@@ -28,17 +28,17 @@ import static com.wealthsearch.utils.ResilienceConfigurationHelper.*;
 public class SpringAiOllamaClient implements OllamaClient {
 
     private final OllamaApi ollamaApi;
+
     private final CircuitBreaker circuitBreaker;
-    private final Retry retry;
+
     private final ChatClient chatClient;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SpringAiOllamaClient(OllamaApi ollamaApi, CircuitBreakerRegistry circuitBreakerRegistry,
             RetryRegistry retryRegistry, ChatClient.Builder chatClientBuilder) {
         this.ollamaApi = ollamaApi;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(SpringAiOllamaClient.class.getSimpleName());
-        this.retry = retryRegistry.retry(SpringAiOllamaClient.class.getSimpleName());
-
         this.chatClient = chatClientBuilder.defaultAdvisors(new SimpleLoggerAdvisor())
                                            .build();
     }
@@ -46,7 +46,6 @@ public class SpringAiOllamaClient implements OllamaClient {
     @PostConstruct
     public void init() {
         configureCircuitBreakerEvents(circuitBreaker);
-        configureRetryEvents(retry);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class SpringAiOllamaClient implements OllamaClient {
         try {
 
             Supplier<T> decoratedSupplier =
-                    CircuitBreaker.decorateSupplier(circuitBreaker, Retry.decorateSupplier(retry, supplier));
+                    CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
             return decoratedSupplier.get();
 
         } catch (Exception ex) {
