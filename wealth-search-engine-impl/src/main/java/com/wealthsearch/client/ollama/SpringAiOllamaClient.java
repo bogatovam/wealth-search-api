@@ -1,5 +1,6 @@
 package com.wealthsearch.client.ollama;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wealthsearch.client.ollama.dto.OllamaEmbedRequest;
 import com.wealthsearch.client.ollama.dto.OllamaEmbedResponse;
 import com.wealthsearch.client.ollama.dto.OllamaGenerateResponse;
@@ -10,7 +11,14 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ResponseEntity;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Supplier;
@@ -25,12 +33,17 @@ public class SpringAiOllamaClient implements OllamaClient {
     private final OllamaApi ollamaApi;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
+    private final ChatClient chatClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SpringAiOllamaClient(OllamaApi ollamaApi, CircuitBreakerRegistry circuitBreakerRegistry,
-            RetryRegistry retryRegistry) {
+            RetryRegistry retryRegistry, ChatClient.Builder chatClientBuilder) {
         this.ollamaApi = ollamaApi;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(SpringAiOllamaClient.class.getSimpleName());
         this.retry = retryRegistry.retry(SpringAiOllamaClient.class.getSimpleName());
+
+        this.chatClient = chatClientBuilder.defaultAdvisors(new SimpleLoggerAdvisor())
+                                           .build();
     }
 
     @PostConstruct
@@ -40,8 +53,8 @@ public class SpringAiOllamaClient implements OllamaClient {
     }
 
     @Override
-    public OllamaGenerateResponse generate(OllamaApi.ChatRequest request) {
-        return executeWithResilience(() -> generateInternal(request), "generate");
+    public FtsQueryExpandResult generate(Prompt prompt) {
+        return executeWithResilience(() -> generateInternal(prompt), "generate");
     }
 
     @Override
@@ -49,11 +62,12 @@ public class SpringAiOllamaClient implements OllamaClient {
         return executeWithResilience(() -> embedInternal(request), "embed");
     }
 
-    private OllamaGenerateResponse generateInternal(OllamaApi.ChatRequest request) {
+    private FtsQueryExpandResult generateInternal(Prompt prompt) {
         try {
-            OllamaApi.ChatResponse response = ollamaApi.chat(request);
-
-            return mapGenerateResponse(response);
+            String content = this.chatClient.prompt(prompt)
+                                            .call()
+                                            .content();
+            return objectMapper.readValue(content, FtsQueryExpandResult.class);
         } catch (Exception ex) {
             throw new OllamaClientException("Failed to generate response", ex);
         }

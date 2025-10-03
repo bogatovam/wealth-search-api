@@ -7,7 +7,10 @@ import com.wealthsearch.service.util.SearchQueryUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -18,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -28,8 +31,6 @@ public class SemanticSearchQueryExpander {
 
     private final OllamaClient ollamaClient;
 
-    private final ObjectMapper objectMapper;
-
     private final OllamaChatRequestProperties chatRequestProperties;
 
     @Value("${semantic-search.prompts.synonym-path}")
@@ -38,13 +39,13 @@ public class SemanticSearchQueryExpander {
     @Value("${spring.ai.ollama.chat.model}")
     private String chatModel;
 
-    private String promptTemplate;
+    private PromptTemplate promptTemplate;
 
     @PostConstruct
     void loadPromptTemplate() {
         try (InputStreamReader reader =
                 new InputStreamReader(synonymPromptResource.getInputStream(), StandardCharsets.UTF_8)) {
-            this.promptTemplate = FileCopyUtils.copyToString(reader);
+            this.promptTemplate = new PromptTemplate(FileCopyUtils.copyToString(reader));
 
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to load synonym expansion prompt", ex);
@@ -52,42 +53,18 @@ public class SemanticSearchQueryExpander {
     }
 
     public Set<String> expandQueryWithSynonyms(String query) {
-        OllamaApi.ChatRequest request = this.buildOllamaRequestWithQuery(query);
+        OllamaOptions options = this.buildOllamaRequestWithQuery();
+        Prompt prompt = promptTemplate.create(Map.of("QUERY", query), options);
 
-        OllamaGenerateResponse response = ollamaClient.generate(request);
-        try {
-            log.info("{}", objectMapper.writeValueAsString(request));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        String content = response != null ? response.getResponse() : null;
+        FtsQueryExpandResult response = ollamaClient.generate(prompt);
 
-        if (!StringUtils.hasText(content)) {
-            log.warn("Empty response received from Ollama for query expansion");
-            return Set.of(query);
-        }
-
-        FtsQueryExpandResult result;
-        try {
-            result = objectMapper.readValue(content, FtsQueryExpandResult.class);
-        } catch (IOException ex) {
-            log.warn("Failed to parse Ollama query expansion response: {}", ex.getMessage());
-            return Set.of(query);
-        }
-
-        return this.collectTermsFromOllamaResponse(result);
+        return this.collectTermsFromOllamaResponse(response);
     }
 
-    private OllamaApi.ChatRequest buildOllamaRequestWithQuery(String query) {
-        String prompt = promptTemplate.replace("{{QUERY}}", query);
-
-        return OllamaApi.ChatRequest.builder(chatModel)
+    private OllamaOptions buildOllamaRequestWithQuery() {
+        return chatRequestProperties.optionsAsBuilder()
+                                    .model(chatModel)
                                     .format(chatRequestProperties.getFormat())
-                                    .messages(List.of(OllamaApi.Message.builder(OllamaApi.Message.Role.TOOL)
-                                                                       .content(prompt)
-                                                                       .build()))
-                                    .stream(chatRequestProperties.isStream())
-                                    .options(chatRequestProperties.copyOptions())
                                     .build();
     }
 

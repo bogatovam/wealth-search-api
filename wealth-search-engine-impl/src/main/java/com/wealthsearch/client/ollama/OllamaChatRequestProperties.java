@@ -16,7 +16,7 @@ public class OllamaChatRequestProperties {
 
     private OllamaOptions options;
 
-    public OllamaOptions copyOptions() {
+    public OllamaOptions.Builder optionsAsBuilder() {
         if (options == null) {
             return null;
         }
@@ -27,7 +27,6 @@ public class OllamaChatRequestProperties {
                             .topK(options.getTopK())
                             .topP(options.getTopP())
                             .repeatPenalty(options.getRepeatPenalty())
-                            .seed(options.getSeed())
-                            .build();
+                            .seed(options.getSeed());
     }
 }

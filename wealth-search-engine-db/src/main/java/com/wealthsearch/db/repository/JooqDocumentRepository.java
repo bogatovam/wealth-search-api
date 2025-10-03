@@ -7,20 +7,23 @@ import com.wealthsearch.model.exception.EntityAlreadyExistsException;
 import com.wealthsearch.model.Document;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 import com.wealthsearch.model.DocumentSearchHit;
 import com.wealthsearch.model.PaginationParams;
 import com.wealthsearch.model.SearchResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.SelectForUpdateStep;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class JooqDocumentRepository implements DocumentRepository {
@@ -49,7 +52,7 @@ public class JooqDocumentRepository implements DocumentRepository {
                                     .fetchOptional()
                                     .orElseThrow(() -> new IllegalStateException("Failed to insert document"));
 
-        return mapDocument(record);
+        return record.into(Document.class);
     }
 
     @Override
@@ -104,18 +107,24 @@ public class JooqDocumentRepository implements DocumentRepository {
     }
 
     private List<DocumentSearchHit> fetchRankedResults(FullTextSearchContext context, PaginationParams pagination) {
-        return dsl.select(DOCUMENTS.asterisk(), context.rankField)
-                  .from(DOCUMENTS)
-                  .where(context.matchCondition)
-                  .orderBy(context.rankField.desc(), DOCUMENTS.CREATED_AT.desc())
-                  .limit(pagination.getLimit())
-                  .offset(pagination.getOffset())
-                  .fetch()
-                  .map(this::mapToDocumentSearchHit);
+        List<Field<?>> fieldsForSelect = Stream.concat(DOCUMENTS.fieldStream(), Stream.of(context.rankField))
+                                               .toList();;
+
+        var query = dsl.select(fieldsForSelect)
+                       .from(DOCUMENTS)
+                       .where(context.matchCondition)
+                       .orderBy(context.rankField.desc(), DOCUMENTS.CREATED_AT.desc())
+                       .limit(pagination.getLimit())
+                       .offset(pagination.getOffset());
+
+        log.info("SQL Query: {}", query.getSQL(ParamType.INLINED));
+
+        return query.fetch()
+                    .map(this::mapToDocumentSearchHit);
     }
 
     private DocumentSearchHit mapToDocumentSearchHit(Record record) {
-        Document document = mapDocument(record);
+        Document document = record.into(Document.class);
         double score = record.get("rank", Double.class);
         return DocumentSearchHit.builder()
                                 .document(document)
@@ -139,17 +148,6 @@ public class JooqDocumentRepository implements DocumentRepository {
         return dsl.fetchExists(dsl.selectOne()
                                   .from(DOCUMENTS)
                                   .where(DOCUMENTS.ID.eq(id)));
-    }
-
-    private Document mapDocument(Record record) {
-        DocumentsRecord documentsRecord = record.into(DOCUMENTS);
-        return Document.builder()
-                       .id(documentsRecord.getId())
-                       .clientId(documentsRecord.getClientId())
-                       .title(documentsRecord.getTitle())
-                       .content(documentsRecord.getContent())
-                       .createdAt(toUtc(documentsRecord.getCreatedAt()))
-                       .build();
     }
 
     private OffsetDateTime toUtc(OffsetDateTime dateTime) {
