@@ -1,15 +1,13 @@
 # Wealth Search Engine
 
-A semantic search engine for wealth management documents and client data, powered by PostgreSQL full-text search and Ollama AI for query expansion.
+## Quick Links
 
+- Installation notes: `docs/installation-notes.md`
+- Swagger UI (running app): `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON (running app): `http://localhost:8080/v3/api-docs`
+- Swagger spec (snapshot): `docs/swagger-spec.json`
+- 
 ## Features
-
-- **Client Search**: Fuzzy search for clients by company domain
-- **Document Search**: Semantic search across document titles and content
-- **Ollama Integration**: AI-powered query expansion with synonyms and related terms
-- **Full-Text Search**: PostgreSQL tsvector and trigram similarity
-- **Resilience**: Circuit breaker and retry patterns for Ollama integration
-- **Caching**: Query expansion results cached for performance
 
 ## Search Execution Examples
 
@@ -27,18 +25,9 @@ GET /search/clients?q=neviswelth&limit=20&offset=0
 ```
 Still finds `neviswealth` clients despite the typo using trigram similarity
 
-**Multiple Company Search**
-```bash
-GET /search/clients?q=neviswealth
-GET /search/clients?q=wealthbridge
-```
-Returns clients ranked by similarity score (0.0 to 1.0)
+#### Implementation Details
 
-**With Pagination**
-```bash
-GET /search/clients?q=neviswealth&limit=10&offset=0   # First page
-GET /search/clients?q=neviswealth&limit=10&offset=10  # Second page
-```
+Query and Email Normalization + pg_trgm based filtering
 
 ### 2. Document Search with Semantic Expansion
 
@@ -46,7 +35,7 @@ GET /search/clients?q=neviswealth&limit=10&offset=10  # Second page
 ```bash
 GET /search/documents?q=wealth&limit=20&offset=0
 ```
-Searches in both document title and content fields
+Searches in document content fields
 
 **Semantic Expansion via Ollama**
 ```bash
@@ -55,7 +44,7 @@ GET /search/documents?q=wealth management
 Ollama expands the query with:
 - **Synonyms**: `asset management`, `portfolio management`
 - **Related**: `financial planning`, `investment strategy`
-- **Narrower**: `401k management`, `estate planning`
+- **Narrower**: `estate planning`
 
 **Complex Queries**
 ```bash
@@ -70,43 +59,12 @@ GET /search/documents?q=J.P. Morgan
 ```
 Handles dots, spaces, and special characters correctly
 
-### 3. Search Result Structure
+#### Implementation Details
 
-**Client Search Response**
-```json
-[
-  {
-    "client": {
-      "id": "uuid",
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "john.doe@neviswealth.com",
-      "domainName": "neviswealth",
-      "countryOfResidence": "US",
-      "createdAt": "2025-10-03T12:00:00Z"
-    },
-    "score": 0.95
-  }
-]
-```
-Header: `X-Total-Count: 1`
+Query Normalization + Postgres FTS + LLM query expansion
 
-**Document Search Response**
-```json
-[
-  {
-    "document": {
-      "id": "uuid",
-      "clientId": "uuid",
-      "title": "Wealth Management Strategy",
-      "content": "Comprehensive wealth management plan...",
-      "createdAt": "2025-10-03T12:00:00Z"
-    },
-    "score": 0.87
-  }
-]
-```
-Header: `X-Total-Count: 15`
+### 3. Document Summary
+
 
 ### 4. Query Normalization
 
@@ -116,23 +74,6 @@ All queries are automatically normalized:
 - **Special chars removed**: Only `@`, `.`, `_`, `'`, `&`, `-` retained
 - **Whitespace collapsed**: `multiple   spaces` � `multiple spaces`
 - **Trimmed**: `  query  ` � `query`
-
-### 5. Validation Rules
-
-**Query Length**
-- Maximum: 128 characters
-- Empty queries rejected
-
-**Pagination**
-- Limit: 1-100 (default: 20)
-- Offset: e 0 (default: 0)
-
-**Error Example**
-```bash
-GET /search/clients?q=&limit=20
-# Returns: 400 Bad Request
-# {"errors": [{"message": "Query should not be empty"}]}
-```
 
 ### 6. Advanced Search Features
 
@@ -188,7 +129,7 @@ If Ollama is unavailable:
 3. **Monitor X-Total-Count** - Shows total matches without fetching all
 4. **Cache-friendly queries** - Repeated queries benefit from Ollama cache
 
-### 9. Example Use Cases
+### 9. Example Search Queries and Responses
 
 **Find all clients from a company**
 ```bash
@@ -221,7 +162,7 @@ GET /search/clients?q=nevsis  # Still finds "neviswealth"
 - **Resilience**: Resilience4j (Circuit Breaker, Retry)
 - **Testing**: JUnit 5, Mockito, Testcontainers
 
-## Notes
+## Assumptions
 
 - Search is case-insensitive
 - All timestamps in UTC
