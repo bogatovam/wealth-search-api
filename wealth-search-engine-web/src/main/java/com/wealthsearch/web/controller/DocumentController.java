@@ -34,7 +34,7 @@ public class DocumentController {
 
     @GetMapping("/{documentId}")
     public ResponseEntity<DocumentSummaryProcessItem> requestSummary(@PathVariable("clientId") UUID clientId,
-                                                                     @PathVariable("documentId") UUID documentId) {
+            @PathVariable("documentId") UUID documentId) {
 
         return new ResponseEntity<>(documentService.generateSummaryForDocument(clientId, documentId), HttpStatus.OK);
     }

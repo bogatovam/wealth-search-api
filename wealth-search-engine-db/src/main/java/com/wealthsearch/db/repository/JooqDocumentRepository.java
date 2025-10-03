@@ -56,6 +56,14 @@ public class JooqDocumentRepository implements DocumentRepository {
     }
 
     @Override
+    public Optional<Document> findById(UUID documentId) {
+        return dsl.selectFrom(DOCUMENTS)
+                .where(DOCUMENTS.ID.eq(documentId))
+                .fetchOptional()
+                .map(record -> record.into(Document.class));
+    }
+
+    @Override
     public List<Document> findByClientId(UUID clientId) {
         return dsl.selectFrom(DOCUMENTS)
                   .where(DOCUMENTS.CLIENT_ID.eq(clientId))

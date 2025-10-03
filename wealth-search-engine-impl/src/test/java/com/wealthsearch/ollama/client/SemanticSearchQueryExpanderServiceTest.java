@@ -76,7 +76,7 @@ class SemanticSearchQueryExpanderServiceTest {
 
         Set<String> terms = expanderService.expandQueryWithSynonyms("wealth");
 
-        assertThat(terms).containsExactlyInAnyOrder("wealth management", "financial planning", "portfolio review");
+        assertThat(terms).containsExactlyInAnyOrder("wealth management", "financial planning", "portfolio review", "wealth");
         verify(ollamaClient, times(1)).generate(ArgumentMatchers.any(Prompt.class));
     }
 

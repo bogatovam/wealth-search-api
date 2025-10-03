@@ -15,7 +15,7 @@ public final class SearchQueryUtils {
     private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}\\p{Cf}]+");
     private static final Pattern QUOTES = Pattern.compile("[\"«»“”„‟‹›]");
     private static final Pattern COMBINING_MARKS = Pattern.compile("\\p{M}+");
-    private static final Pattern DISALLOWED = Pattern.compile("[^\\p{L}\\p{N} ._'&@-]");
+    private static final Pattern DISALLOWED = Pattern.compile("[^\\p{L}\\p{N}]");
     private static final Pattern MULTI_WHITESPACE = Pattern.compile("\\s+");
 
     private SearchQueryUtils() {}
