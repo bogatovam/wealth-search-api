@@ -15,5 +15,5 @@ public interface ClientRepository {
 
     Optional<Client> findById(UUID clientId);
 
-    SearchResult<ClientSearchHit> findClientsByCompanyDomain(List<String> domains, PaginationParams paginationParams);
+    SearchResult<ClientSearchHit> findClientsByCompanyDomain(List<String> words, PaginationParams paginationParams);
 }

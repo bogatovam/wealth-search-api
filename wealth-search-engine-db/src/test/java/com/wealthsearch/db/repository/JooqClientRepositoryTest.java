@@ -128,14 +128,14 @@ class JooqClientRepositoryTest extends PostgresContainerSupport {
                                     .build());
 
         SearchResult<ClientSearchHit> searchResult = clientRepository.findClientsByCompanyDomain(
-                List.of("neviswealth", "wealthbridge"),
+                List.of("nevis", "wealth"),
                 PaginationParams.of(10, 0));
 
-        assertThat(searchResult.getTotalCount()).isEqualTo(2);
+        assertThat(searchResult.getTotalCount()).isEqualTo(1);
         assertThat(searchResult.getResults())
                 .extracting(ClientSearchHit::getClient)
                 .extracting(Client::getId)
-                .containsExactlyInAnyOrder(nevis.getId(), wealth.getId());
+                .containsExactlyInAnyOrder(nevis.getId());
     }
 
     @Test

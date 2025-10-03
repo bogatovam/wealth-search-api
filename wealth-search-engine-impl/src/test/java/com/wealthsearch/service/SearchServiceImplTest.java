@@ -88,7 +88,7 @@ class SearchServiceImplTest {
         verify(clientRepository).findClientsByCompanyDomain(domainCaptor.capture(), eq(pagination));
 
         // Should be normalized to lowercase and spaces removed
-        assertThat(domainCaptor.getValue().get(0)).isEqualTo("neviswealth");
+        assertThat(domainCaptor.getValue()).containsExactlyInAnyOrder("nevis", "wealth");
     }
 
     @Test

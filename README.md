@@ -9,8 +9,6 @@
 - 
 ## Features
 
-## Search Execution Examples
-
 ### 1. Client Search by Company Domain
 
 **Simple Exact Match**

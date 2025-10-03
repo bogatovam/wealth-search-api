@@ -9,6 +9,7 @@ import com.wealthsearch.model.entity.search.ClientSearchHit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.wealthsearch.model.entity.search.DocumentSearchHit;
 import com.wealthsearch.model.entity.search.PaginationParams;
@@ -40,13 +41,16 @@ public class SearchServiceImpl implements SearchService {
     public SearchResult<ClientSearchHit> searchClientsPerCompanyName(String query, PaginationParams paginationParams) {
         this.validateQuery(query);
         String normalizedQuery = SearchQueryUtils.normalize(query);
-        normalizedQuery = SearchQueryUtils.removeSpaces(normalizedQuery);
+
+//        normalizedQuery = SearchQueryUtils.removeSpaces(normalizedQuery);
 
         if (normalizedQuery.isEmpty()) {
             throw new BadRequestException("Query does not contain searchable characters");
         }
 
-        return clientRepository.findClientsByCompanyDomain(List.of(normalizedQuery), paginationParams);
+        Pattern WS = Pattern.compile("\\s+");
+        String[] words = WS.split(normalizedQuery.trim());
+        return clientRepository.findClientsByCompanyDomain(List.of(words), paginationParams);
     }
 
     @Override

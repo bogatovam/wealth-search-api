@@ -78,8 +78,8 @@ public class JooqClientRepository implements ClientRepository {
     }
 
     @Override
-    public SearchResult<ClientSearchHit> findClientsByCompanyDomain(List<String> domains, PaginationParams pagination) {
-        Condition condition = this.createFuzzyMatchCondition(CLIENTS.DOMAIN_NAME, domains);
+    public SearchResult<ClientSearchHit> findClientsByCompanyDomain(List<String> words, PaginationParams pagination) {
+        Condition condition = this.createFuzzyMatchCondition(CLIENTS.DOMAIN_NAME, words);
 
         Long totalCount = dsl.selectCount()
                              .from(CLIENTS)
@@ -90,7 +90,7 @@ public class JooqClientRepository implements ClientRepository {
             return new SearchResult<ClientSearchHit>();
         }
 
-        Field<Double> score = this.createScoreFieldForSelect(CLIENTS.DOMAIN_NAME, domains);
+        Field<Double> score = this.createScoreFieldForSelect(CLIENTS.DOMAIN_NAME, words);
 
         List<Field<?>> fieldsForSelect = new ArrayList<>(List.of(CLIENTS.fields()));
         fieldsForSelect.add(score);
@@ -137,20 +137,28 @@ public class JooqClientRepository implements ClientRepository {
         return score.as("score");
     }
 
-    private Condition createFuzzyMatchCondition(Field<String> field, List<String> candidates) {
-        if (candidates == null || candidates.isEmpty()) {
+    private Condition createFuzzyMatchCondition(Field<String> field, List<String> words) {
+        if (words == null || words.isEmpty()) {
             throw new IllegalArgumentException("At least one candidate must be provided");
         }
 
-        Condition combined = DSL.falseCondition();
+        Condition combined = DSL.trueCondition();
 
-        for (String candidate : candidates) {
-            Field<String> query = DSL.inline(candidate, SQLDataType.VARCHAR);
+        for (String candidate : words) {
+            if (candidate.length() < 3) {
+                Field<String> query = DSL.inline("%" + candidate + "%", SQLDataType.VARCHAR);
 
-            Condition candidateCondition = DSL.condition("{0} % {1}", field, query)
-                                              .or(DSL.condition("{0} <% {1}", query, field));
+                Condition candidateCondition = DSL.condition("{0} ILIKE {1}", field, query);
 
-            combined = combined.or(candidateCondition);
+                combined = combined.and(candidateCondition);
+            } else {
+                Field<String> query = DSL.inline(candidate, SQLDataType.VARCHAR);
+
+                Condition candidateCondition = DSL.condition("{0} % {1}", field, query)
+                                                  .or(DSL.condition("{0} <% {1}", query, field));
+
+                combined = combined.and(candidateCondition);
+            }
         }
 
         return combined;
