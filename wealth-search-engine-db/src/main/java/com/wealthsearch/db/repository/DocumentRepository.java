@@ -1,9 +1,9 @@
 package com.wealthsearch.db.repository;
 
-import com.wealthsearch.model.Document;
-import com.wealthsearch.model.DocumentSearchHit;
-import com.wealthsearch.model.PaginationParams;
-import com.wealthsearch.model.SearchResult;
+import com.wealthsearch.model.entity.Document;
+import com.wealthsearch.model.entity.search.DocumentSearchHit;
+import com.wealthsearch.model.entity.search.PaginationParams;
+import com.wealthsearch.model.entity.search.SearchResult;
 
 import java.util.List;
 import java.util.Set;

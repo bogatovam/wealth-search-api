@@ -4,21 +4,20 @@ import static com.wealthsearch.db.jooq.tables.Documents.DOCUMENTS;
 
 import com.wealthsearch.db.jooq.tables.records.DocumentsRecord;
 import com.wealthsearch.model.exception.EntityAlreadyExistsException;
-import com.wealthsearch.model.Document;
+import com.wealthsearch.model.entity.Document;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Stream;
 
-import com.wealthsearch.model.DocumentSearchHit;
-import com.wealthsearch.model.PaginationParams;
-import com.wealthsearch.model.SearchResult;
+import com.wealthsearch.model.entity.search.DocumentSearchHit;
+import com.wealthsearch.model.entity.search.PaginationParams;
+import com.wealthsearch.model.entity.search.SearchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.SelectForUpdateStep;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;

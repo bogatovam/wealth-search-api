@@ -90,7 +90,7 @@
                                     <properties>
                                         <property>
                                             <key>packages</key>
-                                            <value>com.wealthsearch.model</value>
+                                            <value>com.wealthsearch.model.entity</value>
                                         </property>
                                         <property>
                                             <key>persistence-unit-name</key>

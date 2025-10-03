@@ -3,12 +3,12 @@ package com.wealthsearch.service;
 import com.wealthsearch.api.DocumentService;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.db.repository.DocumentRepository;
-import com.wealthsearch.model.Document;
-import java.util.List;
+import com.wealthsearch.model.entity.Document;
+
 import java.util.Objects;
 import java.util.UUID;
 
-import com.wealthsearch.model.DocumentSummaryProcessItem;
+import com.wealthsearch.model.entity.DocumentSummaryProcessItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

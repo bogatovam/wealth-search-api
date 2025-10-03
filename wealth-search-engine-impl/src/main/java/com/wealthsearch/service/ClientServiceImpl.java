@@ -3,7 +3,7 @@ package com.wealthsearch.service;
 import com.wealthsearch.api.ClientService;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.model.exception.DuplicateClientEmailException;
-import com.wealthsearch.model.Client;
+import com.wealthsearch.model.entity.Client;
 import com.wealthsearch.model.exception.ClientAlreadyExistsException;
 import java.util.Locale;
 import java.util.Optional;

@@ -1,9 +1,8 @@
 package com.wealthsearch.api;
 
-import com.wealthsearch.model.Document;
-import com.wealthsearch.model.DocumentSummaryProcessItem;
+import com.wealthsearch.model.entity.Document;
+import com.wealthsearch.model.entity.DocumentSummaryProcessItem;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface DocumentService {

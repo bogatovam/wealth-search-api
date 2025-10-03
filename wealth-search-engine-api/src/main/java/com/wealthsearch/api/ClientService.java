@@ -1,6 +1,6 @@
 package com.wealthsearch.api;
 
-import com.wealthsearch.model.Client;
+import com.wealthsearch.model.entity.Client;
 import java.util.Optional;
 import java.util.UUID;
 

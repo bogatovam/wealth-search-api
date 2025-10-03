@@ -1,4 +1,4 @@
-﻿spring:
+spring:
   application:
     name: wealth-search-engine
   datasource:
@@ -40,6 +40,13 @@ semantic-search:
   prompts:
     synonym-path: classpath:prompts/synonym-query-expand.txt
 
+ollama:
+  client:
+    connect-timeout: 5s
+    read-timeout: 15s
+    response-timeout: 15s
+    write-timeout: 10s
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -52,28 +59,10 @@ resilience4j:
   circuitbreaker:
     instances:
       ollama:
-        registerHealthIndicator: true
         slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
         waitDurationInOpenState: 10s
-        failureRateThreshold: 50
-        slowCallRateThreshold: 50
-        slowCallDurationThreshold: 30s
-        recordExceptions:
-          - com.wealthsearch.model.exception.OllamaClientException
-          - java.util.concurrent.TimeoutException
-          - java.io.IOException
-
   retry:
     instances:
       ollama:
         maxAttempts: 3
         waitDuration: 1s
-        enableExponentialBackoff: true
-        exponentialBackoffMultiplier: 2
-        retryExceptions:
-          - com.wealthsearch.model.exception.OllamaClientException
-          - java.util.concurrent.TimeoutException
-          - java.io.IOException

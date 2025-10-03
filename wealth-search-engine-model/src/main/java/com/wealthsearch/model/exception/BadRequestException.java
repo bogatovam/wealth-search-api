@@ -1,6 +1,5 @@
 package com.wealthsearch.model.exception;
 
-import com.wealthsearch.model.error.ErrorEntry;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

@@ -1,12 +1,12 @@
 package com.wealthsearch.web.controller;
 
 import com.wealthsearch.api.DocumentService;
-import com.wealthsearch.model.Document;
-import com.wealthsearch.model.DocumentSummaryProcessItem;
+import com.wealthsearch.model.entity.Document;
+import com.wealthsearch.model.entity.DocumentSummaryProcessItem;
 import jakarta.validation.Valid;
-import java.util.Objects;
+
 import java.util.UUID;
-import org.springframework.http.HttpHeaders;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

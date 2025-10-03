@@ -3,9 +3,12 @@ package com.wealthsearch.db.repository;
 import static com.wealthsearch.db.jooq.tables.Clients.CLIENTS;
 
 import com.wealthsearch.db.jooq.tables.records.ClientsRecord;
+import com.wealthsearch.model.entity.Client;
+import com.wealthsearch.model.entity.search.ClientSearchHit;
+import com.wealthsearch.model.entity.search.PaginationParams;
+import com.wealthsearch.model.entity.search.SearchResult;
 import com.wealthsearch.model.exception.DuplicateClientEmailException;
 import com.wealthsearch.model.exception.EntityAlreadyExistsException;
-import com.wealthsearch.model.*;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;

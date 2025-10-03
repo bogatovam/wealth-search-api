@@ -1,9 +1,6 @@
 package com.wealthsearch.web.error;
 
-import com.wealthsearch.model.exception.BadRequestException;
-import com.wealthsearch.model.exception.ClientAlreadyExistsException;
-import com.wealthsearch.model.error.ErrorEntry;
-import com.wealthsearch.model.exception.OllamaClientException;
+import com.wealthsearch.model.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -55,7 +52,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<List<ErrorEntry>> handleOllamaClientException(OllamaClientException exception) {
         log.error("Ollama service error: ", exception);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                             .body(List.of(new ErrorEntry(ErrorMessage.OLLAMA_SERVICE_ERROR.format(exception.getMessage()))));
+                             .body(List.of(new ErrorEntry(
+                                     ErrorMessage.OLLAMA_SERVICE_ERROR.format(exception.getMessage()))));
     }
 
     @ExceptionHandler(Exception.class)

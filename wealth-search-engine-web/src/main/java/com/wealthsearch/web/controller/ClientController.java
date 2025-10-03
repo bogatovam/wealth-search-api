@@ -1,7 +1,7 @@
 package com.wealthsearch.web.controller;
 
 import com.wealthsearch.api.ClientService;
-import com.wealthsearch.model.Client;
+import com.wealthsearch.model.entity.Client;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

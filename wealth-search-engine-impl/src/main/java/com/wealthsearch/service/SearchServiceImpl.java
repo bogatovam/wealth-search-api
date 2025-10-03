@@ -1,21 +1,21 @@
 package com.wealthsearch.service;
 
 import com.wealthsearch.api.SearchService;
-import com.wealthsearch.client.ollama.SemanticSearchQueryExpander;
+import com.wealthsearch.api.ollama.SemanticSearchQueryExpander;
 import com.wealthsearch.db.repository.ClientRepository;
 import com.wealthsearch.db.repository.DocumentRepository;
-import com.wealthsearch.model.ClientSearchHit;
+import com.wealthsearch.model.entity.search.ClientSearchHit;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.wealthsearch.model.DocumentSearchHit;
-import com.wealthsearch.model.PaginationParams;
-import com.wealthsearch.model.SearchResult;
-import com.wealthsearch.model.error.ErrorEntry;
+import com.wealthsearch.model.entity.search.DocumentSearchHit;
+import com.wealthsearch.model.entity.search.PaginationParams;
+import com.wealthsearch.model.entity.search.SearchResult;
+import com.wealthsearch.model.exception.ErrorEntry;
 import com.wealthsearch.model.exception.BadRequestException;
-import com.wealthsearch.service.util.SearchQueryUtils;
+import com.wealthsearch.utils.SearchQueryUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;

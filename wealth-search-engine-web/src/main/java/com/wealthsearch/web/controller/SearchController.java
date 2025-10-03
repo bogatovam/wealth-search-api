@@ -1,10 +1,10 @@
 package com.wealthsearch.web.controller;
 
 import com.wealthsearch.api.SearchService;
-import com.wealthsearch.model.ClientSearchHit;
-import com.wealthsearch.model.DocumentSearchHit;
-import com.wealthsearch.model.PaginationParams;
-import com.wealthsearch.model.SearchResult;
+import com.wealthsearch.model.entity.search.ClientSearchHit;
+import com.wealthsearch.model.entity.search.DocumentSearchHit;
+import com.wealthsearch.model.entity.search.PaginationParams;
+import com.wealthsearch.model.entity.search.SearchResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
