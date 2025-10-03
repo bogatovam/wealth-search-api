@@ -86,6 +86,28 @@ curl --location 'localhost:8080/search/clients?q=J.P.%20Morgan'
 [
   {
     "client": {
+      "id": "3f3943e7-b528-4b45-8966-b21c2a3c69bf",
+      "firstName": "Roman",
+      "lastName": "Romanov",
+      "email": "insights@morgan.j.p.com",
+      "countryOfResidence": "US",
+      "createdAt": "2025-10-03T20:01:24.885494+02:00"
+    },
+    "score": 0.85714287
+  },
+  {
+    "client": {
+      "id": "5217cebb-29d8-4761-ab90-0d4f495825db",
+      "firstName": "Roman",
+      "lastName": "Romanov",
+      "email": "insights@morganjp.com",
+      "countryOfResidence": "US",
+      "createdAt": "2025-10-03T20:01:59.263899+02:00"
+    },
+    "score": 0.85714287
+  },
+  {
+    "client": {
       "id": "d4d063e4-e56c-4f15-8478-388d92a103d2",
       "firstName": "Roman",
       "lastName": "Romanov",
@@ -93,7 +115,7 @@ curl --location 'localhost:8080/search/clients?q=J.P.%20Morgan'
       "countryOfResidence": "US",
       "createdAt": "2025-10-03T19:44:00.578447+02:00"
     },
-    "score": 1.0
+    "score": 0.71428573
   },
   {
     "client": {
@@ -104,7 +126,7 @@ curl --location 'localhost:8080/search/clients?q=J.P.%20Morgan'
       "countryOfResidence": "US",
       "createdAt": "2025-10-03T20:03:28.570575+02:00"
     },
-    "score": 1.0
+    "score": 0.71428573
   }
 ]
 ```
