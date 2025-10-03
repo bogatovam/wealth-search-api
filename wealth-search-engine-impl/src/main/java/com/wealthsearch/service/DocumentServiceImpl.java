@@ -62,7 +62,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public DocumentSummaryProcessItem generateSummaryForDocument(UUID clientId, UUID documentId) {
+    public DocumentSummaryProcessItem generateSummaryForDocument(UUID documentId) {
         Document document = documentRepository.findById(documentId)
                                               .orElseThrow(() -> new NotFoundException(
                                                       "Document with this id not found"));

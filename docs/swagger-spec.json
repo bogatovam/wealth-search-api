@@ -1,0 +1,459 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Wealth Search Engine API",
+    "description" : "API for managing clients, documents, and search",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "http://localhost:8080",
+    "description" : "Generated server url"
+  } ],
+  "tags" : [ {
+    "name" : "Search",
+    "description" : "Client search operations"
+  }, {
+    "name" : "Documents",
+    "description" : "Document management and summary operations"
+  }, {
+    "name" : "Clients",
+    "description" : "Client management operations"
+  } ],
+  "paths" : {
+    "/clients" : {
+      "post" : {
+        "tags" : [ "Clients" ],
+        "summary" : "Create a new client",
+        "description" : "Creates a new client profile in the system",
+        "operationId" : "createClient",
+        "requestBody" : {
+          "description" : "Client data to create",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Client"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Client created successfully",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid client data provided",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Client"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clients/{clientId}/documents" : {
+      "post" : {
+        "tags" : [ "Documents" ],
+        "summary" : "Upload a document for a client",
+        "description" : "Creates a new document associated with the specified client",
+        "operationId" : "createDocument",
+        "parameters" : [ {
+          "name" : "clientId",
+          "in" : "path",
+          "description" : "Client identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "123e4567-e89b-12d3-a456-426614174000"
+        } ],
+        "requestBody" : {
+          "description" : "Document data to create",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Document"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Document created successfully",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid document data provided",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Client not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Document"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/documents" : {
+      "get" : {
+        "tags" : [ "Search" ],
+        "summary" : "Search documents by content",
+        "description" : "Performs similarity search across document content and titles",
+        "operationId" : "searchDocuments",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Search query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "compliance"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Maximum number of results to return",
+          "required" : false,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          },
+          "example" : 20
+        }, {
+          "name" : "offset",
+          "in" : "query",
+          "description" : "Number of results to skip",
+          "required" : false,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          },
+          "example" : 0
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Search results with total count in X-Total-Count header",
+            "headers" : {
+              "X-Total-Count" : {
+                "description" : "Total number of matching documents",
+                "style" : "simple",
+                "schema" : {
+                  "type" : "integer"
+                }
+              }
+            },
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DocumentSearchHit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/clients" : {
+      "get" : {
+        "tags" : [ "Search" ],
+        "summary" : "Search clients by company name",
+        "description" : "Performs fuzzy search for clients based on company domain extracted from email",
+        "operationId" : "search",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Search query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "neviswealth"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "Maximum number of results to return",
+          "required" : false,
+          "schema" : {
+            "maximum" : 100,
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          },
+          "example" : 20
+        }, {
+          "name" : "offset",
+          "in" : "query",
+          "description" : "Number of results to skip",
+          "required" : false,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          },
+          "example" : 0
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Search results with total count in X-Total-Count header",
+            "headers" : {
+              "X-Total-Count" : {
+                "description" : "Total number of matching clients",
+                "style" : "simple",
+                "schema" : {
+                  "type" : "integer"
+                }
+              }
+            },
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ClientSearchHit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{documentId}/summary" : {
+      "get" : {
+        "tags" : [ "Documents" ],
+        "summary" : "Request document summary generation",
+        "description" : "Initiates or retrieves the status of summary generation for a document",
+        "operationId" : "requestSummary",
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "path",
+          "description" : "Document identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "123e4567-e89b-12d3-a456-426614174000"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Summary process item returned",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentSummaryProcessItem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Document not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentSummaryProcessItem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Client" : {
+        "required" : [ "email", "firstName", "lastName" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique client identifier",
+            "format" : "uuid"
+          },
+          "firstName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "Client first name",
+            "example" : "Ivan"
+          },
+          "lastName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "Client last name",
+            "example" : "Ivanov"
+          },
+          "email" : {
+            "maxLength" : 320,
+            "minLength" : 0,
+            "pattern" : "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "type" : "string",
+            "description" : "Primary client email",
+            "example" : "Ivan.Ivanov@neviswealth.com"
+          },
+          "countryOfResidence" : {
+            "maxLength" : 2,
+            "minLength" : 2,
+            "pattern" : "[A-Z]{2}",
+            "type" : "string",
+            "description" : "ISO country code where the client resides",
+            "example" : "CH"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "Timestamp when the client record was created",
+            "format" : "date-time",
+            "readOnly" : true
+          }
+        },
+        "description" : "Client profile stored in the platform"
+      },
+      "Document" : {
+        "required" : [ "clientId", "content", "title" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique document identifier",
+            "format" : "uuid"
+          },
+          "clientId" : {
+            "type" : "string",
+            "description" : "Identifier of the client owning the document",
+            "format" : "uuid"
+          },
+          "title" : {
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "Document title",
+            "example" : "KYC Form"
+          },
+          "content" : {
+            "type" : "string",
+            "description" : "Raw document content"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "Timestamp when the document was created",
+            "format" : "date-time",
+            "readOnly" : true
+          }
+        },
+        "description" : "Document uploaded for a client"
+      },
+      "DocumentSearchHit" : {
+        "type" : "object",
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/Document"
+          },
+          "score" : {
+            "type" : "number",
+            "description" : "Score of the match",
+            "format" : "double",
+            "example" : 0.85
+          }
+        },
+        "description" : "Search result entry containing document match"
+      },
+      "ClientSearchHit" : {
+        "type" : "object",
+        "properties" : {
+          "client" : {
+            "$ref" : "#/components/schemas/Client"
+          },
+          "score" : {
+            "type" : "number",
+            "description" : "Score of the match",
+            "format" : "double",
+            "example" : 0.85
+          }
+        },
+        "description" : "Search result entry containing client and document match"
+      },
+      "DocumentSummaryProcessItem" : {
+        "required" : [ "documentId", "status" ],
+        "type" : "object",
+        "properties" : {
+          "processItemId" : {
+            "type" : "string",
+            "description" : "Unique process item identifier",
+            "format" : "uuid",
+            "readOnly" : true
+          },
+          "documentId" : {
+            "type" : "string",
+            "description" : "Document identifier the summary belongs to",
+            "format" : "uuid"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Processing status",
+            "example" : "IN_PROGRESS",
+            "enum" : [ "IN_PROGRESS", "FAILED", "COMPLETED" ]
+          },
+          "summary" : {
+            "type" : "string",
+            "description" : "Generated summary text",
+            "readOnly" : true
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "When processing started",
+            "format" : "date-time",
+            "readOnly" : true
+          },
+          "completedAt" : {
+            "type" : "string",
+            "description" : "When processing completed",
+            "format" : "date-time",
+            "readOnly" : true
+          }
+        },
+        "description" : "Summary generation job for a document"
+      }
+    }
+  }
+}

@@ -8,5 +8,5 @@ import java.util.UUID;
 public interface DocumentService {
     Document createDocument(Document document);
 
-    DocumentSummaryProcessItem generateSummaryForDocument(UUID clientId, UUID documentId);
+    DocumentSummaryProcessItem generateSummaryForDocument(UUID documentId);
 }

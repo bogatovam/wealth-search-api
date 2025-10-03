@@ -63,9 +63,17 @@ public class SearchController {
     }
 
     @GetMapping("/documents")
+    @Operation(summary = "Search documents by content",
+            description = "Performs similarity search across document content and titles",
+            responses = {
+                @ApiResponse(responseCode = "200",
+                        description = "Search results with total count in X-Total-Count header",
+                        headers = @Header(name = "X-Total-Count", description = "Total number of matching documents",
+                                schema = @Schema(type = "integer")))
+            })
     public ResponseEntity<List<DocumentSearchHit>> searchDocuments(
             @Parameter(description = "Search query", required = true,
-                    example = "neviswealth") @RequestParam("q") String query,
+                    example = "compliance") @RequestParam("q") String query,
             @Parameter(description = "Maximum number of results to return",
                     example = "20") @RequestParam(value = "limit", defaultValue = "20") @Min(1) @Max(100) int limit,
             @Parameter(description = "Number of results to skip", example = "0") @RequestParam(value = "offset",

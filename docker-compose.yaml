@@ -1,0 +1,71 @@
+﻿version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wealthsearch-postgres
+    environment:
+      POSTGRES_DB: wealthsearch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d wealthsearch" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthsearch-network
+
+  #  pgadmin:
+  #    image: dpage/pgadmin4
+  #    container_name: pgadmin4_container
+  #    restart: always
+  #    ports:
+  #      - "5050:80"
+  #    environment:
+  #      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #      PGADMIN_DEFAULT_PASSWORD: admin
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    tty: true
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes:
+      - ./ollama_data:/root/.ollama
+      - ./ollama-entrypoint.sh:/ollama-entrypoint.sh
+    entrypoint: [ "/usr/bin/bash", "/ollama-entrypoint.sh" ]
+    networks:
+      - wealthsearch-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wealthsearch-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wealthsearch
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_TEXT_MODEL: gemma2:2b
+      OLLAMA_EMBED_MODEL: gemma2:2b
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wealthsearch-network
+    restart: unless-stopped
+
+networks:
+  wealthsearch-network:
+    driver: bridge
