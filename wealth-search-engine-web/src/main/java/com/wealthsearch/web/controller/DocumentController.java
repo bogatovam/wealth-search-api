@@ -32,7 +32,7 @@ public class DocumentController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{documentId}")
+    @GetMapping("/{documentId}/summary")
     public ResponseEntity<DocumentSummaryProcessItem> requestSummary(@PathVariable("clientId") UUID clientId,
             @PathVariable("documentId") UUID documentId) {
 

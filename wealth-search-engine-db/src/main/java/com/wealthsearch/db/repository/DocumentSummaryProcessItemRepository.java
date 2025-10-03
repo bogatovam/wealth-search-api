@@ -16,5 +16,9 @@ public interface DocumentSummaryProcessItemRepository {
 
     DocumentSummaryProcessItem insert(UUID documentId, DocumentSummaryProcessStatus status, OffsetDateTime createdAt);
 
-    boolean markStatus(UUID processItemId, DocumentSummaryProcessStatus status, OffsetDateTime completedAt);
+    DocumentSummaryProcessItem insertEventOrReturnExisting(UUID documentId);
+
+    DocumentSummaryProcessItem markStatus(UUID processItemId, DocumentSummaryProcessStatus status);
+
+    void complete(UUID id, String summary);
 }

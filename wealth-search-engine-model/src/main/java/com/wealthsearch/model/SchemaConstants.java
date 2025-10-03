@@ -36,7 +36,6 @@ public final class SchemaConstants {
 
     public static final class DocumentSummaryProcessItems {
         public static final String TABLE = "document_summary_process_items";
-        public static final String COLUMN_ID = "id";
         public static final String COLUMN_DOCUMENT_ID = "document_id";
         public static final String COLUMN_STATUS = "status";
         public static final String COLUMN_SUMMARY = "summary";

@@ -31,7 +31,7 @@ import lombok.ToString;
 public class DocumentSummaryProcessItem {
 
     @Id
-    @Column(name = DocumentSummaryProcessItems.COLUMN_ID, columnDefinition = ColumnDefinition.UUID)
+    @Column(name = DocumentSummaryProcessItems.COLUMN_DOCUMENT_ID, columnDefinition = ColumnDefinition.UUID)
     @Schema(description = "Unique process item identifier", accessMode = Schema.AccessMode.READ_ONLY)
     private UUID processItemId;
 

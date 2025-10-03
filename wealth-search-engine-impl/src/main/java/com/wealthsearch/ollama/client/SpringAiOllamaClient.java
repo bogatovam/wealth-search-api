@@ -3,31 +3,24 @@ package com.wealthsearch.ollama.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wealthsearch.api.ollama.client.OllamaClient;
 import com.wealthsearch.model.ollama.FtsQueryExpandResult;
-import com.wealthsearch.model.ollama.OllamaEmbedRequest;
-import com.wealthsearch.model.ollama.OllamaEmbedResponse;
 import com.wealthsearch.model.exception.OllamaClientException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Supplier;
 
-import static com.wealthsearch.utils.OllamaResponseMapperUtils.*;
 import static com.wealthsearch.utils.ResilienceConfigurationHelper.*;
 
 @Slf4j
 @Component
 public class SpringAiOllamaClient implements OllamaClient {
-
-    private final OllamaApi ollamaApi;
 
     private final CircuitBreaker circuitBreaker;
 
@@ -35,9 +28,8 @@ public class SpringAiOllamaClient implements OllamaClient {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public SpringAiOllamaClient(OllamaApi ollamaApi, CircuitBreakerRegistry circuitBreakerRegistry,
-            RetryRegistry retryRegistry, ChatClient.Builder chatClientBuilder) {
-        this.ollamaApi = ollamaApi;
+    public SpringAiOllamaClient(CircuitBreakerRegistry circuitBreakerRegistry, RetryRegistry retryRegistry,
+            ChatClient.Builder chatClientBuilder) {
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(SpringAiOllamaClient.class.getSimpleName());
         this.chatClient = chatClientBuilder.defaultAdvisors(new SimpleLoggerAdvisor())
                                            .build();
@@ -54,8 +46,8 @@ public class SpringAiOllamaClient implements OllamaClient {
     }
 
     @Override
-    public OllamaEmbedResponse embed(OllamaEmbedRequest request) {
-        return executeWithResilience(() -> embedInternal(request), "embed");
+    public String generateAsText(Prompt prompt) {
+        return executeWithResilience(() -> generateInternalAsText(prompt), "generate");
     }
 
     private FtsQueryExpandResult generateInternal(Prompt prompt) {
@@ -69,21 +61,20 @@ public class SpringAiOllamaClient implements OllamaClient {
         }
     }
 
-    private OllamaEmbedResponse embedInternal(OllamaEmbedRequest request) {
+    private String generateInternalAsText(Prompt prompt) {
         try {
-            OllamaApi.EmbeddingsResponse embedResponse =
-                    ollamaApi.embed(new OllamaApi.EmbeddingsRequest(request.getModel(), request.getPrompt()));
-            return mapEmbedResponse(embedResponse);
+            return this.chatClient.prompt(prompt)
+                                  .call()
+                                  .content();
         } catch (Exception ex) {
-            throw new OllamaClientException("Failed to generate embeddings", ex);
+            throw new OllamaClientException("Failed to generate response", ex);
         }
     }
 
     private <T> T executeWithResilience(Supplier<T> supplier, String operation) {
         try {
 
-            Supplier<T> decoratedSupplier =
-                    CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
+            Supplier<T> decoratedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
             return decoratedSupplier.get();
 
         } catch (Exception ex) {

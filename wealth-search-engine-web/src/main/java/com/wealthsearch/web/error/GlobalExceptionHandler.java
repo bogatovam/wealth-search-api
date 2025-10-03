@@ -7,10 +7,14 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
@@ -42,6 +46,40 @@ public class GlobalExceptionHandler {
                              .body(List.of(new ErrorEntry(exception.getMessage())));
     }
 
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<List<ErrorEntry>> handleEntityAlreadyExists(EntityAlreadyExistsException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                             .body(List.of(new ErrorEntry(exception.getMessage())));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<List<ErrorEntry>> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException exception) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                             .body(List.of(new ErrorEntry(exception.getMessage())));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<List<ErrorEntry>> handleHttpMessageNotReadable(HttpMessageNotReadableException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(List.of(new ErrorEntry("Malformed JSON request")));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<List<ErrorEntry>> handleMissingParameter(MissingServletRequestParameterException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(List.of(new ErrorEntry(
+                                     ErrorMessage.FIELD_VALIDATION_ERROR.format(exception.getParameterName(),
+                                                                                "required parameter is missing"))));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<List<ErrorEntry>> handleTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(List.of(new ErrorEntry(
+                                     ErrorMessage.FIELD_VALIDATION_ERROR.format(exception.getName(), "invalid value: "
+                                             + exception.getValue()))));
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<List<ErrorEntry>> handleBadRequest(BadRequestException exception) {
         log.error("Bad request: ", exception);
@@ -59,9 +97,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<List<ErrorEntry>> handleNotFound(NoResourceFoundException exception) {
-        log.error("Unexpected error", exception);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                              .body(List.of(new ErrorEntry("Unknown endpoint")));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<List<ErrorEntry>> handleBusinessNotFound(NotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                             .body(exception.getErrors());
+    }
+
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<List<ErrorEntry>> handleConflict(ConflictException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                             .body(exception.getErrors());
     }
 
 

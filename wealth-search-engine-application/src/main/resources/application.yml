@@ -39,13 +39,16 @@ server:
 semantic-search:
   prompts:
     synonym-path: classpath:prompts/synonym-query-expand.txt
+document-summary:
+  prompts:
+    short-summary: classpath:prompts/doc-summary.txt
 
 ollama:
   client:
-    connect-timeout: 5s
-    read-timeout: 10s
-    response-timeout: 5s
-    write-timeout: 5s
+    connect-timeout: 30s
+    read-timeout: 30s
+    response-timeout: 30s
+    write-timeout: 30s
 
 springdoc:
   api-docs:

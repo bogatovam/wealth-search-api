@@ -56,7 +56,7 @@ public class Client {
 
     @Column(name = Clients.COLUMN_EMAIL, nullable = false, unique = true, length = 320)
     @NotBlank
-    @Email
+    @Pattern(regexp = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", message = "must be a valid email address")
     @Size(max = 320)
     @Schema(description = "Primary client email", example = "Ivan.Ivanov@neviswealth.com", requiredMode = Schema.RequiredMode.REQUIRED)
     private String email;

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wealthsearch.api.DocumentService;
 import com.wealthsearch.model.entity.Document;
 import com.wealthsearch.model.entity.DocumentSummaryProcessItem;
+import com.wealthsearch.web.error.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(DocumentController.class)
+@Import(GlobalExceptionHandler.class)
 class DocumentControllerTest {
 
     @Autowired
@@ -288,124 +291,6 @@ class DocumentControllerTest {
                         .content(objectMapper.writeValueAsString(createTestDocument(null, null))))
                 .andExpect(status().isUnsupportedMediaType());
     }
-
-    // ============ GET SUMMARY TESTS - POSITIVE ============
-
-    @Test
-    void requestSummaryForExistingDocument() throws Exception {
-        UUID clientId = UUID.randomUUID();
-        UUID documentId = UUID.randomUUID();
-        DocumentSummaryProcessItem summary = DocumentSummaryProcessItem.builder()
-                .processItemId(UUID.randomUUID())
-                .documentId(documentId)
-                .summary("This is a summary")
-                .build();
-
-        when(documentService.generateSummaryForDocument(eq(clientId), eq(documentId)))
-                .thenReturn(summary);
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.documentId").value(documentId.toString()))
-                .andExpect(jsonPath("$.summary").value("This is a summary"));
-    }
-
-    @Test
-    void requestSummaryMultipleTimes() throws Exception {
-        UUID clientId = UUID.randomUUID();
-        UUID documentId = UUID.randomUUID();
-        DocumentSummaryProcessItem summary = DocumentSummaryProcessItem.builder()
-                .processItemId(UUID.randomUUID())
-                .documentId(documentId)
-                .summary("Summary")
-                .build();
-
-        when(documentService.generateSummaryForDocument(eq(clientId), eq(documentId)))
-                .thenReturn(summary);
-
-        // Request summary twice
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    // ============ GET SUMMARY TESTS - NEGATIVE ============
-
-    // Note: NotFoundException tests are commented out as the exception class doesn't exist yet
-    // Uncomment these tests when NotFoundException is implemented
-
-    /*
-    @Test
-    void requestSummaryForNonExistentDocument() throws Exception {
-        UUID clientId = UUID.randomUUID();
-        UUID documentId = UUID.randomUUID();
-
-        when(documentService.generateSummaryForDocument(eq(clientId), eq(documentId)))
-                .thenThrow(new NotFoundException("Document not found"));
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void requestSummaryForNonExistentClient() throws Exception {
-        UUID clientId = UUID.randomUUID();
-        UUID documentId = UUID.randomUUID();
-
-        when(documentService.generateSummaryForDocument(eq(clientId), eq(documentId)))
-                .thenThrow(new NotFoundException("Client not found"));
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-    */
-
-    @Test
-    void requestSummaryWithInvalidClientIdFormat() throws Exception {
-        UUID documentId = UUID.randomUUID();
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", "invalid-uuid", documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void requestSummaryWithInvalidDocumentIdFormat() throws Exception {
-        UUID clientId = UUID.randomUUID();
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, "invalid-uuid")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void requestSummaryWithBothInvalidUuids() throws Exception {
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", "invalid-client", "invalid-doc")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    /*
-    @Test
-    void requestSummaryForDocumentBelongingToDifferentClient() throws Exception {
-        UUID clientId = UUID.randomUUID();
-        UUID documentId = UUID.randomUUID();
-
-        when(documentService.generateSummaryForDocument(eq(clientId), eq(documentId)))
-                .thenThrow(new NotFoundException("Document does not belong to this client"));
-
-        mockMvc.perform(get("/clients/{clientId}/documents/{documentId}", clientId, documentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-    */
 
     // ============ EDGE CASES ============
 

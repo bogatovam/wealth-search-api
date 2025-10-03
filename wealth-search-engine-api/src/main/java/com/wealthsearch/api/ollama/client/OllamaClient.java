@@ -1,8 +1,6 @@
 package com.wealthsearch.api.ollama.client;
 
 import com.wealthsearch.model.ollama.FtsQueryExpandResult;
-import com.wealthsearch.model.ollama.OllamaEmbedRequest;
-import com.wealthsearch.model.ollama.OllamaEmbedResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 
 /**
@@ -18,11 +16,5 @@ public interface OllamaClient {
      */
     FtsQueryExpandResult generate(Prompt prompt);
 
-    /**
-     * Generate embeddings using Ollama.
-     *
-     * @param request the embedding request
-     * @return the embedding response
-     */
-    OllamaEmbedResponse embed(OllamaEmbedRequest request);
+    String generateAsText(Prompt input);
 }

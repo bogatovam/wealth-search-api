@@ -49,7 +49,6 @@ public class JooqDocumentSummaryProcessItemRepository implements DocumentSummary
             OffsetDateTime createdAt) {
 
         return dsl.insertInto(DOCUMENT_SUMMARY_PROCESS_ITEMS)
-                  .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.ID, UUID.randomUUID())
                   .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.DOCUMENT_ID, documentId)
                   .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.STATUS, status.name())
                   .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.CREATED_AT, createdAt)
@@ -59,13 +58,35 @@ public class JooqDocumentSummaryProcessItemRepository implements DocumentSummary
     }
 
     @Override
-    public boolean markStatus(UUID processItemId, DocumentSummaryProcessStatus status, OffsetDateTime completedAt) {
+    public DocumentSummaryProcessItem markStatus(UUID documentId, DocumentSummaryProcessStatus status) {
         return dsl.update(DOCUMENT_SUMMARY_PROCESS_ITEMS)
                   .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.STATUS, status.name())
-                  .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.COMPLETED_AT, completedAt)
-                  .where(DOCUMENT_SUMMARY_PROCESS_ITEMS.ID.eq(processItemId)
-                                                          .and(DOCUMENT_SUMMARY_PROCESS_ITEMS.COMPLETED_AT.isNull()))
-                  .execute() > 0;
+                  .where(DOCUMENT_SUMMARY_PROCESS_ITEMS.DOCUMENT_ID.eq(documentId))
+                  .returning()
+                  .fetchOne()
+                  .into(DocumentSummaryProcessItem.class);
+    }
+
+    @Override
+    public void complete(UUID documentId, String summary) {
+        dsl.update(DOCUMENT_SUMMARY_PROCESS_ITEMS)
+           .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.STATUS, DocumentSummaryProcessStatus.COMPLETED.name())
+           .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.COMPLETED_AT, OffsetDateTime.now())
+           .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.SUMMARY, summary)
+           .where(DOCUMENT_SUMMARY_PROCESS_ITEMS.DOCUMENT_ID.eq(documentId))
+           .execute();
+    }
+
+    @Override
+    public DocumentSummaryProcessItem insertEventOrReturnExisting(UUID documentId) {
+        return dsl.insertInto(DOCUMENT_SUMMARY_PROCESS_ITEMS)
+                  .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.DOCUMENT_ID, documentId)
+                  .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.STATUS, DocumentSummaryProcessStatus.IN_PROGRESS.name())
+                  .set(DOCUMENT_SUMMARY_PROCESS_ITEMS.CREATED_AT, OffsetDateTime.now())
+                  .onConflictDoNothing()
+                  .returning()
+                  .fetchOptional(r -> r.into(DocumentSummaryProcessItem.class))
+                  .orElseThrow(() -> new IllegalStateException("Failed to insert document summary process item"));
     }
 
     private SelectConditionStep<DocumentSummaryProcessItemsRecord> selectBase(UUID documentId) {
