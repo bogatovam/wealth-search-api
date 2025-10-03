@@ -45,3 +45,11 @@ You can monitor the progress by watching the logs:
 ```bash
 docker-compose logs -f
 ```
+
+### 4. Test
+
+You can use postman collection to make requests
+
+**IMPORTANT**: The first request to search will be long because of ollama init (~30s).
+
+[Data Generation Collection.postman_collection.json](./Data%20Generation%20Collection.postman_collection.json)

@@ -1,0 +1,277 @@
+{
+	"info": {
+		"_postman_id": "71d24bb4-dfee-411a-b6cd-6557ad97ce39",
+		"name": "Data Generation Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7440720"
+	},
+	"item": [
+		{
+			"name": "Create Client",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\": \"Ivan\",\r\n    \"lastName\": \"Ivanov\",\r\n    \"email\": \"support@wealthbridge.ai\",\r\n    \"countryOfResidence\": \"US\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/clients",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Client",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\": \"Fedor\",\r\n    \"lastName\": \"Fedotov\",\r\n    \"email\": \"insights@neviswealth.com\",\r\n    \"countryOfResidence\": \"US\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/clients",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Client",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							"pm.collectionVariables.set(\"clientId\", jsonData.id);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\": \"Roman\",\r\n    \"lastName\": \"Romanov\",\r\n    \"email\": \"insights@j.p.morgan.com\",\r\n    \"countryOfResidence\": \"US\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/clients",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Document",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							"pm.collectionVariables.set(\"documentId\", jsonData.id);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"title\": \"Income Statement – John Vance\",\r\n    \"content\": \"income statement uploaded for John Vance as part of the wealth assessment review. Residence registered since 2022 with supporting evidence (national ID, IBAN).\\n\\nCompliance context: controls assessed against FATF Travel Rule. Declared card spending measured at 88.90 with monthly income 23,555.99 USD. All personal identifiers validated against passport and national registry data.\\n\\nNext steps: share summary with relationship manager, recalculate affordability metrics, confirm address change with postal service. Client will be notified once verification and archival steps are complete.\\n\\nReference ID 1-1 | Generated 2025-10-03 19:23:35\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/clients/{{clientId}}/documents",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"documents"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Client by company",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/search/clients?q=J.P. Morgan  ",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"search",
+						"clients"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "J.P. Morgan  "
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Documents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/search/documents?q=wealth management",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"search",
+						"documents"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "wealth management"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Summary",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/documents/{{documentId}}/summary",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"documents",
+						"{{documentId}}",
+						"summary"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Summary",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/documents/{{documentId}}/summary",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"documents",
+								"{{documentId}}",
+								"summary"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Fri, 03 Oct 2025 18:46:43 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"processItemId\": \"6d82668f-dc29-46fd-a87b-e632e0de6e10\",\n    \"documentId\": \"6d82668f-dc29-46fd-a87b-e632e0de6e10\",\n    \"status\": \"COMPLETED\",\n    \"summary\": \"John Vance's wealth assessment review is complete, with an income statement uploaded for the period under review.  Compliance controls have been assessed against FATF Travel Rule requirements and verified personal identifiers are in alignment with official documentation. Next steps include sharing a summary with the relationship manager, recalculating affordability metrics, confirming address changes with postal services, and notifying John of completion once verification and archival procedures are finalized.\",\n    \"createdAt\": \"2025-10-03T20:46:12.365018+02:00\",\n    \"completedAt\": \"2025-10-03T20:46:33.794563+02:00\"\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "clientId",
+			"value": ""
+		},
+		{
+			"key": "documentId",
+			"value": ""
+		}
+	]
+}
