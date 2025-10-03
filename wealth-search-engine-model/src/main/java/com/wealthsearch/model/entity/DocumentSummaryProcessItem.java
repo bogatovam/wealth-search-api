@@ -13,6 +13,8 @@ import lombok.*;
 @ToString
 public class DocumentSummaryProcessItem {
 
+    private UUID processItemId;
+
     private UUID documentId;
 
     private String status;

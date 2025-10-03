@@ -24,7 +24,7 @@ spring:
             top-k: 40
             repeat-penalty: 1.2
             seed: 42
-            num-predict: 150
+            num-predict: 200
       embedding:
         model: ${OLLAMA_EMBED_MODEL:gemma2:2b}
 
@@ -43,7 +43,7 @@ semantic-search:
 ollama:
   client:
     connect-timeout: 5s
-    read-timeout: 5s
+    read-timeout: 10s
     response-timeout: 5s
     write-timeout: 5s
 
